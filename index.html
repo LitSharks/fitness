@@ -52,7 +52,7 @@
           </tr>
         </thead>
         <tbody id="trainingTableBody">
-          <!-- Sample row (can be dynamically updated via the API later) -->
+          <!-- You could load a default or global training plan here -->
           <tr>
             <td>T1</td>
             <td>Off</td>
@@ -97,8 +97,10 @@
     </div>
     <div id="userContent" style="display:none;">
       <h3>Welcome, <span id="loggedInUser"></span>!</h3>
-      <p>This is your personalized fitness plan content.</p>
-      <!-- Future: load user-specific training plan and tutorials here -->
+      <h4>Your Training Plan</h4>
+      <p id="userTraining"></p>
+      <h4>Your Tutorials</h4>
+      <p id="userTutorials"></p>
     </div>
   </div>
 
@@ -127,22 +129,168 @@
     </div>
   </div>
 
-  <!-- Include jsrsasign for Google Sheets API functionality if needed -->
+  <!-- Include jsrsasign for JWT signing -->
   <script src="https://cdn.jsdelivr.net/npm/jsrsasign"></script>
   <script>
-    // In-memory storage for demo (not persistent)
-    let users = {
-      "cardio": "guy",   // Admin credentials
-      "user1": "password1"
-    };
-    let userData = {
-      "user1": {
-        training: "Default training plan for user1.",
-        tutorials: "Default tutorials for user1."
-      }
-    };
-    let currentUser = null;
+    /********************
+     * Google Sheets API Setup
+     ********************/
+    const SERVICE_ACCOUNT_EMAIL = "service-account@fitness-coaching-api.iam.gserviceaccount.com";
+    const PRIVATE_KEY = `-----BEGIN PRIVATE KEY-----
+MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCs4H5Hh6v2tsqo
+Z6MxKPprhhJr9TTCyvS/H+fL/Az4ngOAxEK0h054osWUa5lUzU7MZUFAszLmUiJZ
+qR+AKXqLtCtvbaGiRO7vyvI6zg+8JU3LdyKDxaYoJqD+/ZBI7vN+SCjxWla5V/bG
+psJKpMXyTyXMn8hqMxyzQ696LZ1rAiSR1AWosslfw2TCFFzDmZeqH8H3c4G1FZIJ
+dYt9+cGZYN7R2bhDWL2aRlXMJJXuC39P8zGojXVdZ+fKv1eiG/fhSRW6ddEJTror
+NsCNwIyQnpx1IQkq4lMMsgsOkwSNp56QtLVeTRkvtqsymBdF2fGWtCK+LWsXbIgj
++BribK+NAgMBAAECggEAEQXRAW+fU/2XUoJT/Cr+D5jl1voP7i9obqpwW3Jv/4ol
+q6gHrnmVVUUn4e+/ay2FORSuWnXayPmk9sGzv521+qwsy73WmOEjSvrno7k3LO5a
+bPLH9ARCEnmNSFaE/t2CnfhyiaN83ybFfrWcc5eqgyvee7nvFOAADznWvVfhBJCJ
+qEHV93niS4bHyO42S/dfwJCB9bH0LNuuDwkBo4ucAYzkltATDZdBtFFIH3KLuzgr
+Wv99PhJnVxoakrXqHkIyS638m+c1fqztYm2icHkgPFYbLSW3KOWBoU41iGLNioS6
+wkB47mAH0W+krRUHM5RXcaRW/7Uus7kXELmlJfCK6QKBgQDiotyiGvDXxhRBTyZv
+LJOZNJJ5Ux3mqiSS2HAB5B2B8Yeum1K4KxyqcYOC6JQioqNkH/WBX3vlWcGTATbx
+YfgQX6WU7YCByX/CrJ5QChll/YLFIz6mLyjPyPWbt32CiDSSU6AQi4NLaXCJOhlN
+4ihkohj3s+jrXoEfHfKZjYGFiQKBgQDDRocxhIAme+EM/MXK/Zzt7d7TCElF/3Pp
+MiZO0WsMZ9rZU+LzX7evP1+aCvCc9RGplgIkVl8/66G+DIGNoEIID3y23Xzs31WT
+C8o4eelP1TcN3apmczGpeWViuzUgsrydV4+iGiVnaFZLMtn/Fpz4jQlYhRGObwhb
+nMxvYztc5QKBgQDAJCc93+1UYgCGJh6Fnps8BlAwQAFXr+P2Az1ivQ0vP6AyrkiB
+DzvsXPSMJbaBbrVri5TOrC8UEPaGNT9pgg+Xgh+VlY2fez+vwj0tyoIh773QeMMC
+jXTiRJPGAtiLtAIuFGvd2wnjA29/SBxv5U8tkifsyUCtW5/Iy9ED0e5/UQKBgQCp
+lpLKulvhECy+7reINwEW0UJ22/dmxxePKnKCePUS7Q7vNx8eZb5MgCkyytV0OpGA
+SjrJ/Aj0plrthkbtDITMI0cYOPrJbJwQ/Gg+7AFnx6/sZtoZ52j12evm9taI8zFD
+JEwlZ7ecOszWue8Azk68vR+ktMwuetczWNVi1zcy0QKBgCv30zzEtv/uEmW4Uh1d
+rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
+6WxeGq4ufJup8vQrIn0l6F/OYxB118Z2G4Iz9F87jcUM6PYOfUwJt1g9CuUmzmSH
+7/TjHERfIzWM9qI+/ha6ZlIy
+-----END PRIVATE KEY-----\n`;
+    const TOKEN_URL = "https://oauth2.googleapis.com/token";
+    const SCOPES = "https://www.googleapis.com/auth/spreadsheets";
+    const SPREADSHEET_ID = "1aHnKAI9lNw8-ewOjwKV9XAwt8u10qU2C_OTFSoJCwe8";
+    // Range for users data (assumes headers are in row 1)
+    const USERS_RANGE = "Users!A2:D";
+    // The sheetId for the "Users" tab – update this if needed (gid from the URL)
+    const USERS_SHEET_ID = 0; 
 
+    // Global storage for loaded user data from the sheet
+    let allUsers = [];
+    // Store the currently logged-in user (object from allUsers)
+    let currentUser = null;
+    // For editing a user in admin panel
+    let currentEditRow = null;
+
+    // Function to get an access token using the service account
+    async function getAccessToken() {
+      const header = { alg: "RS256", typ: "JWT" };
+      const now = Math.floor(Date.now() / 1000);
+      const claims = {
+        iss: SERVICE_ACCOUNT_EMAIL,
+        scope: SCOPES,
+        aud: TOKEN_URL,
+        iat: now,
+        exp: now + 3600
+      };
+      const sHeader = JSON.stringify(header);
+      const sPayload = JSON.stringify(claims);
+      const privateKey = KEYUTIL.getKey(PRIVATE_KEY);
+      const sJWT = KJUR.jws.JWS.sign("RS256", sHeader, sPayload, privateKey);
+      const formData = new URLSearchParams();
+      formData.append("grant_type", "urn:ietf:params:oauth:grant-type:jwt-bearer");
+      formData.append("assertion", sJWT);
+      const response = await fetch(TOKEN_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: formData.toString()
+      });
+      const data = await response.json();
+      return data.access_token;
+    }
+
+    /********************
+     * Sheet Data Functions
+     ********************/
+    // Load all users from the sheet and store in allUsers[]
+    async function loadUsers() {
+      const token = await getAccessToken();
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${USERS_RANGE}`;
+      const response = await fetch(url, { headers: { "Authorization": `Bearer ${token}` } });
+      const data = await response.json();
+      allUsers = [];
+      if (data.values) {
+        data.values.forEach((row, index) => {
+          allUsers.push({
+            row: index + 2, // because first data row is row 2
+            username: row[0],
+            password: row[1],
+            training: row[2] || "",
+            tutorials: row[3] || ""
+          });
+        });
+      }
+    }
+
+    // Update a user in the sheet at a given row
+    async function updateUser(row, userObj) {
+      const token = await getAccessToken();
+      const range = `Users!A${row}:D${row}`;
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?valueInputOption=USER_ENTERED`;
+      const body = JSON.stringify({
+        values: [[userObj.username, userObj.password, userObj.training, userObj.tutorials]]
+      });
+      const response = await fetch(url, {
+        method: "PUT",
+        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+        body: body
+      });
+      return await response.json();
+    }
+
+    // Append a new user to the sheet
+    async function appendUser(userObj) {
+      const token = await getAccessToken();
+      const range = "Users!A:D";
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
+      const body = JSON.stringify({
+        values: [[userObj.username, userObj.password, userObj.training, userObj.tutorials]]
+      });
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+        body: body
+      });
+      return await response.json();
+    }
+
+    // Delete a user (row) using batchUpdate
+    async function deleteUserRow(row) {
+      const token = await getAccessToken();
+      const rowIndex = row - 1; // Convert sheet row number to 0-indexed
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}:batchUpdate`;
+      const body = JSON.stringify({
+        requests: [
+          {
+            deleteDimension: {
+              range: {
+                sheetId: USERS_SHEET_ID,
+                dimension: "ROWS",
+                startIndex: rowIndex,
+                endIndex: rowIndex + 1
+              }
+            }
+          }
+        ]
+      });
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+        body: body
+      });
+      return await response.json();
+    }
+
+    /********************
+     * UI and Login Functions
+     ********************/
     // Tab switching logic
     document.querySelectorAll('.tab-link').forEach(link => {
       link.addEventListener('click', () => {
@@ -152,25 +300,28 @@
       });
     });
 
-    // Login functionality
-    document.getElementById('loginBtn').addEventListener('click', () => {
+    // Login functionality: load users from sheet then verify credentials
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+      await loadUsers();
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
-      if (users[username] && users[username] === password) {
-        currentUser = username;
+      const user = allUsers.find(u => u.username === username && u.password === password);
+      if (user) {
+        currentUser = user;
         alert('Login successful!');
-        // Hide login form and show personalized content
+        // Hide login form, show user content with their data
         document.getElementById('loginForm').style.display = 'none';
         document.getElementById('userContent').style.display = 'block';
         document.getElementById('loggedInUser').textContent = username;
-        // Reveal the Training and Tutorials tabs
+        document.getElementById('userTraining').textContent = user.training || "No training plan set.";
+        document.getElementById('userTutorials').textContent = user.tutorials || "No tutorials set.";
+        // Reveal the Training and Tutorials tabs, and hide the Login tab
         document.getElementById('navTraining').style.display = 'inline';
         document.getElementById('navTutorials').style.display = 'inline';
-        // Hide the Login tab and show Logout link
         document.getElementById('navLogin').style.display = 'none';
         document.getElementById('logoutLink').style.display = 'inline';
-        // If admin, also show the Admin Control tab
-        if(username === 'cardio'){
+        // If admin (username "cardio"), show Admin Control tab
+        if (username === 'cardio') {
           document.getElementById('navAdmin').style.display = 'inline';
         }
         // Switch to Training tab after login
@@ -184,11 +335,10 @@
     // Logout functionality
     document.getElementById('logoutLink').addEventListener('click', () => {
       currentUser = null;
-      // Hide user-specific tabs
+      // Hide user-specific tabs and show Login
       document.getElementById('navTraining').style.display = 'none';
       document.getElementById('navTutorials').style.display = 'none';
       document.getElementById('navAdmin').style.display = 'none';
-      // Show Login tab again
       document.getElementById('navLogin').style.display = 'inline';
       document.getElementById('logoutLink').style.display = 'none';
       // Reset login view
@@ -199,28 +349,29 @@
       document.getElementById('login').classList.add('active');
     });
 
-    // Admin panel functions
-    document.getElementById('loadUsers').addEventListener('click', () => {
+    /********************
+     * Admin Panel Functions
+     ********************/
+    // Load users into admin panel list
+    document.getElementById('loadUsers').addEventListener('click', async () => {
+      await loadUsers();
       let output = '<ul>';
-      for (const user in users) {
-        output += `<li>${user} - ${users[user]} 
-          <button onclick="editUser('${user}')">Edit</button> 
-          <button onclick="deleteUser('${user}')">Delete</button></li>`;
-      }
+      allUsers.forEach(u => {
+        output += `<li>${u.username} - ${u.password} 
+          <button onclick="editUser(${u.row})">Edit</button> 
+          <button onclick="deleteUser(${u.row})">Delete</button></li>`;
+      });
       output += '</ul>';
       document.getElementById('userList').innerHTML = output;
     });
 
-    document.getElementById('addUser').addEventListener('click', () => {
+    // Add a new user via admin panel
+    document.getElementById('addUser').addEventListener('click', async () => {
       const newUsername = document.getElementById('newUsername').value;
       const newPassword = document.getElementById('newPassword').value;
       if(newUsername && newPassword){
-        users[newUsername] = newPassword;
-        // Initialize default content for the new user
-        userData[newUsername] = {
-          training: "Default training plan.",
-          tutorials: "Default tutorials."
-        };
+        const newUser = { username: newUsername, password: newPassword, training: "Default training plan.", tutorials: "Default tutorials." };
+        await appendUser(newUser);
         alert('User added.');
         document.getElementById('newUsername').value = '';
         document.getElementById('newPassword').value = '';
@@ -230,44 +381,49 @@
       }
     });
 
-    function deleteUser(username) {
-      if (confirm(`Are you sure you want to delete ${username}?`)) {
-        delete users[username];
-        delete userData[username];
+    // Delete a user via admin panel
+    async function deleteUser(row) {
+      if (confirm("Are you sure you want to delete this user?")) {
+        await deleteUserRow(row);
+        alert("User deleted.");
         document.getElementById('loadUsers').click();
       }
     }
 
-    function editUser(username) {
-      // Show the editing section and populate fields with the user's current data
-      document.getElementById('editUser').style.display = 'block';
-      document.getElementById('editUsernameDisplay').textContent = username;
-      document.getElementById('editUsername').value = username;
-      document.getElementById('editPassword').value = users[username];
-      document.getElementById('editTraining').value = userData[username] ? userData[username].training : "";
-      document.getElementById('editTutorials').value = userData[username] ? userData[username].tutorials : "";
+    // Edit a user: load their data into the edit form
+    function editUser(row) {
+      const user = allUsers.find(u => u.row === row);
+      if (user) {
+        currentEditRow = row;
+        document.getElementById('editUser').style.display = 'block';
+        document.getElementById('editUsernameDisplay').textContent = user.username;
+        document.getElementById('editUsername').value = user.username;
+        document.getElementById('editPassword').value = user.password;
+        document.getElementById('editTraining').value = user.training;
+        document.getElementById('editTutorials').value = user.tutorials;
+      }
     }
 
-    document.getElementById('saveEdit').addEventListener('click', () => {
-      const oldUsername = document.getElementById('editUsernameDisplay').textContent;
+    // Save edited user data via admin panel
+    document.getElementById('saveEdit').addEventListener('click', async () => {
       const newUsername = document.getElementById('editUsername').value;
       const newPassword = document.getElementById('editPassword').value;
       const newTraining = document.getElementById('editTraining').value;
       const newTutorials = document.getElementById('editTutorials').value;
-      
-      // Update credentials and content; if username changed, update keys accordingly
-      if(newUsername !== oldUsername){
-        users[newUsername] = newPassword;
-        delete users[oldUsername];
-        userData[newUsername] = { training: newTraining, tutorials: newTutorials };
-        delete userData[oldUsername];
+      if(newUsername && newPassword){
+        const updatedUser = {
+          username: newUsername,
+          password: newPassword,
+          training: newTraining,
+          tutorials: newTutorials
+        };
+        await updateUser(currentEditRow, updatedUser);
+        alert("User updated.");
+        document.getElementById('editUser').style.display = 'none';
+        document.getElementById('loadUsers').click();
       } else {
-        users[newUsername] = newPassword;
-        userData[newUsername] = { training: newTraining, tutorials: newTutorials };
+        alert("Please fill in all fields.");
       }
-      alert('User updated.');
-      document.getElementById('editUser').style.display = 'none';
-      document.getElementById('loadUsers').click();
     });
 
     document.getElementById('cancelEdit').addEventListener('click', () => {
