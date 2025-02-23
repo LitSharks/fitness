@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <title>Fitness Coaching Program</title>
-  <!-- Quill CSS for rich text editing -->
-  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+  <!-- CKEditor 5 Classic Build -->
+  <script src="https://cdn.ckeditor.com/ckeditor5/35.0.1/classic/ckeditor.js"></script>
   <style>
     /* Basic styling */
     body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
@@ -12,53 +12,36 @@
     header nav a { color: #fff; text-decoration: none; margin-right: 1em; font-weight: bold; cursor: pointer; }
     .tab-content { display: none; padding: 1em; }
     .tab-content.active { display: block; }
-    .info-box { position: fixed; right: 0; top: 60px; background: #f9f9f9; border-left: 2px solid #ccc; padding: 1em; width: 300px; max-height: 80%; overflow-y: auto; }
-    .table-container { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; margin-bottom: 1em; }
-    th, td { border: 1px solid #ccc; padding: 0.5em; text-align: center; }
     .login-form { max-width: 300px; margin: 1em auto; border: 1px solid #ccc; padding: 1em; border-radius: 5px; }
     .login-form input { width: 100%; padding: 0.5em; margin-bottom: 1em; }
     .admin-panel { padding: 1em; background: #efefef; margin-bottom: 1em; }
-    /* Styling for the Quill editor containers */
-    .quill-editor {
-      height: 200px;
-      margin-bottom: 1em;
-    }
+    /* Editor container styling */
+    .editor-container { border: 1px solid #ccc; margin-bottom: 1em; }
   </style>
 </head>
 <body>
   <header>
     <nav>
-      <!-- These tabs are hidden until login -->
-      <a data-tab="training" class="tab-link" id="navTraining" style="display:none;">Training Plan</a>
+      <!-- Initially only the Login tab is visible -->
+      <a data-tab="training" class="tab-link" id="navTraining" style="display:none;">Training</a>
       <a data-tab="tutorials" class="tab-link" id="navTutorials" style="display:none;">Tutorials</a>
-      <!-- Login is visible initially -->
       <a data-tab="login" class="tab-link" id="navLogin">Login</a>
-      <!-- Admin control is hidden until an admin logs in -->
       <a data-tab="admin" class="tab-link" id="navAdmin" style="display:none;">Admin Control</a>
       <a id="logoutLink" style="display:none; cursor:pointer; color:#fff; margin-left:1em;">Logout</a>
     </nav>
   </header>
 
-  <!-- Training Plan Tab -->
+  <!-- Training Tab -->
   <div id="training" class="tab-content">
     <h2>Your Training Plan</h2>
-    <!-- This content will be replaced with the user's personalized training plan -->
+    <!-- This div will receive the user’s personalized training plan HTML -->
     <div id="displayTraining"></div>
-    <!-- Optionally, you can still include a default info box -->
-    <div class="info-box">
-      <h3>Notes</h3>
-      <p><strong>X-train</strong> (cross train) means to do something other than running but still targets the legs (e.g., biking, swimming, etc.).</p>
-      <p>On Hard days train Hard and on EZ days train Easy.</p>
-      <p>Eat well &amp; Sleep well (7-9 hours).</p>
-      <p>Ask if you want alternative workouts (e.g., Strength-endurance: calisthenics + weights).</p>
-    </div>
   </div>
 
   <!-- Tutorials Tab -->
   <div id="tutorials" class="tab-content">
     <h2>Your Tutorials</h2>
-    <!-- This content will be replaced with the user's personalized tutorials -->
+    <!-- This div will receive the user’s personalized tutorials HTML -->
     <div id="displayTutorials"></div>
   </div>
 
@@ -69,14 +52,6 @@
       <input type="text" id="username" placeholder="Username" />
       <input type="password" id="password" placeholder="Password" />
       <button id="loginBtn">Login</button>
-    </div>
-    <div id="userContent" style="display:none;">
-      <h3>Welcome, <span id="loggedInUser"></span>!</h3>
-      <!-- The user view now shows their personalized content -->
-      <h4>Your Training Plan</h4>
-      <div id="displayTrainingUser"></div>
-      <h4>Your Tutorials</h4>
-      <div id="displayTutorialsUser"></div>
     </div>
   </div>
 
@@ -91,31 +66,29 @@
       <input type="text" id="newPassword" placeholder="New Password" />
       <button id="addUser">Add User</button>
     </div>
-    <!-- User Editing Page (hidden by default) -->
+    <!-- User Editing Section (hidden by default) -->
     <div id="editUser" style="display:none;">
       <h3>Edit User: <span id="editUsernameDisplay"></span></h3>
       <input type="text" id="editUsername" placeholder="Username" /><br>
       <input type="text" id="editPassword" placeholder="Password" /><br>
       <h4>Training Plan</h4>
-      <!-- Container for Quill editor for Training Plan -->
-      <div id="editTrainingEditor" class="quill-editor"></div>
+      <!-- CKEditor container for Training Plan -->
+      <div id="editTrainingEditor" class="editor-container"></div>
       <h4>Tutorials</h4>
-      <!-- Container for Quill editor for Tutorials -->
-      <div id="editTutorialsEditor" class="quill-editor"></div>
+      <!-- CKEditor container for Tutorials -->
+      <div id="editTutorialsEditor" class="editor-container"></div>
       <button id="saveEdit">Save Changes</button>
       <button id="cancelEdit">Cancel</button>
     </div>
   </div>
 
-  <!-- Include Quill JS -->
-  <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
   <!-- Include a browser-friendly version of jsrsasign -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/10.5.23/jsrsasign-all-min.js"></script>
   <script>
     /********************
      * Configuration & Setup
      ********************/
-    // Update this if your sheet's tab name is different (for example, "Sheet1")
+    // Update this if your sheet's tab name is different (e.g., "Sheet1")
     const SHEET_NAME = "Users";
     const SERVICE_ACCOUNT_EMAIL = "service-account@fitness-coaching-api.iam.gserviceaccount.com";
     const PRIVATE_KEY = `-----BEGIN PRIVATE KEY-----
@@ -149,141 +122,126 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
     const TOKEN_URL = "https://oauth2.googleapis.com/token";
     const SCOPES = "https://www.googleapis.com/auth/spreadsheets";
     const SPREADSHEET_ID = "1aHnKAI9lNw8-ewOjwKV9XAwt8u10qU2C_OTFSoJCwe8";
-    // Define the range using the actual sheet name
+    // Define the range for user data (assumes headers are in row 1)
     const USERS_RANGE = `${SHEET_NAME}!A2:D1000`;
-    // The sheetId for the "Users" tab – update if needed (gid from URL)
-    const USERS_SHEET_ID = 0; 
+    // Sheet ID for the "Users" tab (set via the URL; adjust if needed)
+    const USERS_SHEET_ID = 0;
 
     let allUsers = [];
     let currentUser = null;
     let currentEditRow = null;
 
-    // Global variables for the Quill editors
-    let quillTraining, quillTutorials;
+    // Global CKEditor instances for admin editing
+    let editorTraining, editorTutorials;
 
+    /********************
+     * Google Sheets API Functions
+     ********************/
     async function getAccessToken() {
-      try {
-        const header = { alg: "RS256", typ: "JWT" };
-        const now = Math.floor(Date.now() / 1000);
-        const claims = {
-          iss: SERVICE_ACCOUNT_EMAIL,
-          scope: SCOPES,
-          aud: TOKEN_URL,
-          iat: now,
-          exp: now + 3600
-        };
-        const sHeader = JSON.stringify(header);
-        const sPayload = JSON.stringify(claims);
-        const privateKey = KEYUTIL.getKey(PRIVATE_KEY);
-        const sJWT = KJUR.jws.JWS.sign("RS256", sHeader, sPayload, privateKey);
-        const formData = new URLSearchParams();
-        formData.append("grant_type", "urn:ietf:params:oauth:grant-type:jwt-bearer");
-        formData.append("assertion", sJWT);
-        const response = await fetch(TOKEN_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: formData.toString()
-        });
-        const data = await response.json();
-        return data.access_token;
-      } catch (e) {
-        console.error("Error in getAccessToken: " + e.message);
-        throw e;
-      }
+      const header = { alg: "RS256", typ: "JWT" };
+      const now = Math.floor(Date.now() / 1000);
+      const claims = {
+        iss: SERVICE_ACCOUNT_EMAIL,
+        scope: SCOPES,
+        aud: TOKEN_URL,
+        iat: now,
+        exp: now + 3600
+      };
+      const sHeader = JSON.stringify(header);
+      const sPayload = JSON.stringify(claims);
+      const privateKey = KEYUTIL.getKey(PRIVATE_KEY);
+      const sJWT = KJUR.jws.JWS.sign("RS256", sHeader, sPayload, privateKey);
+      const formData = new URLSearchParams();
+      formData.append("grant_type", "urn:ietf:params:oauth:grant-type:jwt-bearer");
+      formData.append("assertion", sJWT);
+      const response = await fetch(TOKEN_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: formData.toString()
+      });
+      const data = await response.json();
+      return data.access_token;
     }
 
     async function loadUsers() {
-      try {
-        const token = await getAccessToken();
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${USERS_RANGE}`;
-        const response = await fetch(url, { headers: { "Authorization": `Bearer ${token}` } });
-        const data = await response.json();
-        allUsers = [];
-        if (data.values) {
-          data.values.forEach((row, index) => {
-            allUsers.push({
-              row: index + 2,
-              username: row[0],
-              password: row[1],
-              training: row[2] || "",
-              tutorials: row[3] || ""
-            });
+      const token = await getAccessToken();
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${USERS_RANGE}`;
+      const response = await fetch(url, { headers: { "Authorization": `Bearer ${token}` } });
+      const data = await response.json();
+      allUsers = [];
+      if (data.values) {
+        data.values.forEach((row, index) => {
+          allUsers.push({
+            row: index + 2, // because data starts at row 2
+            username: row[0],
+            password: row[1],
+            training: row[2] || "",
+            tutorials: row[3] || ""
           });
-        }
-      } catch (e) {
-        console.error("Error in loadUsers: " + e.message);
+        });
       }
     }
 
     async function updateUser(row, userObj) {
-      try {
-        const token = await getAccessToken();
-        const range = `${SHEET_NAME}!A${row}:D${row}`;
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?valueInputOption=USER_ENTERED`;
-        const body = JSON.stringify({
-          values: [[userObj.username, userObj.password, userObj.training, userObj.tutorials]]
-        });
-        const response = await fetch(url, {
-          method: "PUT",
-          headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
-          body: body
-        });
-        return await response.json();
-      } catch (e) {
-        console.error("Error in updateUser: " + e.message);
-      }
+      const token = await getAccessToken();
+      const range = `${SHEET_NAME}!A${row}:D${row}`;
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?valueInputOption=USER_ENTERED`;
+      const body = JSON.stringify({
+        values: [[userObj.username, userObj.password, userObj.training, userObj.tutorials]]
+      });
+      const response = await fetch(url, {
+        method: "PUT",
+        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+        body: body
+      });
+      return await response.json();
     }
 
     async function appendUser(userObj) {
-      try {
-        const token = await getAccessToken();
-        const range = `${SHEET_NAME}!A:D`;
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
-        const body = JSON.stringify({
-          values: [[userObj.username, userObj.password, userObj.training, userObj.tutorials]]
-        });
-        const response = await fetch(url, {
-          method: "POST",
-          headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
-          body: body
-        });
-        return await response.json();
-      } catch (e) {
-        console.error("Error in appendUser: " + e.message);
-      }
+      const token = await getAccessToken();
+      const range = `${SHEET_NAME}!A:D`;
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
+      const body = JSON.stringify({
+        values: [[userObj.username, userObj.password, userObj.training, userObj.tutorials]]
+      });
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+        body: body
+      });
+      return await response.json();
     }
 
     async function deleteUserRow(row) {
-      try {
-        const token = await getAccessToken();
-        const rowIndex = row - 1;
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}:batchUpdate`;
-        const body = JSON.stringify({
-          requests: [
-            {
-              deleteDimension: {
-                range: {
-                  sheetId: USERS_SHEET_ID,
-                  dimension: "ROWS",
-                  startIndex: rowIndex,
-                  endIndex: rowIndex + 1
-                }
+      const token = await getAccessToken();
+      const rowIndex = row - 1;
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}:batchUpdate`;
+      const body = JSON.stringify({
+        requests: [
+          {
+            deleteDimension: {
+              range: {
+                sheetId: USERS_SHEET_ID,
+                dimension: "ROWS",
+                startIndex: rowIndex,
+                endIndex: rowIndex + 1
               }
             }
-          ]
-        });
-        const response = await fetch(url, {
-          method: "POST",
-          headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
-          body: body
-        });
-        return await response.json();
-      } catch (e) {
-        console.error("Error in deleteUserRow: " + e.message);
-      }
+          }
+        ]
+      });
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+        body: body
+      });
+      return await response.json();
     }
 
-    // UI and Login Functions
+    /********************
+     * UI and Login Functions
+     ********************/
+    // Tab switching
     document.querySelectorAll('.tab-link').forEach(link => {
       link.addEventListener('click', () => {
         const tabId = link.getAttribute('data-tab');
@@ -292,6 +250,7 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       });
     });
 
+    // On login, load users and then find the matching one.
     document.getElementById('loginBtn').addEventListener('click', async () => {
       await loadUsers();
       const username = document.getElementById('username').value;
@@ -300,12 +259,7 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       if (user) {
         currentUser = user;
         alert('Login successful!');
-        document.getElementById('loginForm').style.display = 'none';
-        document.getElementById('userContent').style.display = 'block';
-        document.getElementById('loggedInUser').textContent = username;
-        // Use innerHTML so that any HTML formatting is rendered
-        document.getElementById('displayTrainingUser').innerHTML = user.training || "No training plan set.";
-        document.getElementById('displayTutorialsUser').innerHTML = user.tutorials || "No tutorials set.";
+        // Reveal the user tabs and hide the login tab
         document.getElementById('navTraining').style.display = 'inline';
         document.getElementById('navTutorials').style.display = 'inline';
         document.getElementById('navLogin').style.display = 'none';
@@ -313,6 +267,10 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
         if (username === 'cardio') {
           document.getElementById('navAdmin').style.display = 'inline';
         }
+        // Set user-specific content into the Training and Tutorials tabs
+        document.getElementById('displayTraining').innerHTML = user.training || "<p>No training plan set.</p>";
+        document.getElementById('displayTutorials').innerHTML = user.tutorials || "<p>No tutorials set.</p>";
+        // Switch to Training tab by default
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
         document.getElementById('training').classList.add('active');
       } else {
@@ -327,13 +285,16 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       document.getElementById('navAdmin').style.display = 'none';
       document.getElementById('navLogin').style.display = 'inline';
       document.getElementById('logoutLink').style.display = 'none';
-      document.getElementById('loginForm').style.display = 'block';
-      document.getElementById('userContent').style.display = 'none';
+      // Clear any user content if desired
+      document.getElementById('displayTraining').innerHTML = "";
+      document.getElementById('displayTutorials').innerHTML = "";
       document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
       document.getElementById('login').classList.add('active');
     });
 
-    // Admin Panel Functions
+    /********************
+     * Admin Panel Functions
+     ********************/
     document.getElementById('loadUsers').addEventListener('click', async () => {
       await loadUsers();
       let output = '<ul>';
@@ -349,8 +310,13 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
     document.getElementById('addUser').addEventListener('click', async () => {
       const newUsername = document.getElementById('newUsername').value;
       const newPassword = document.getElementById('newPassword').value;
-      if(newUsername && newPassword){
-        const newUser = { username: newUsername, password: newPassword, training: "Default training plan.", tutorials: "Default tutorials." };
+      if (newUsername && newPassword) {
+        const newUser = { 
+          username: newUsername, 
+          password: newPassword, 
+          training: "<p>Default training plan.</p>", 
+          tutorials: "<p>Default tutorials.</p>" 
+        };
         await appendUser(newUser);
         alert('User added.');
         document.getElementById('newUsername').value = '';
@@ -377,31 +343,32 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
         document.getElementById('editUsernameDisplay').textContent = user.username;
         document.getElementById('editUsername').value = user.username;
         document.getElementById('editPassword').value = user.password;
-        // Initialize Quill editors for training and tutorials:
-        // Destroy previous instances if they exist.
-        if (window.quillTraining) {
-          window.quillTraining.root.innerHTML = ""; // clear content
+        // Initialize CKEditor instances if not already
+        if (!editorTraining) {
+          ClassicEditor
+            .create(document.querySelector('#editTrainingEditor'))
+            .then(editor => { editorTraining = editor; editor.setData(user.training); })
+            .catch(error => { console.error(error); });
         } else {
-          window.quillTraining = new Quill('#editTrainingEditor', { theme: 'snow' });
+          editorTraining.setData(user.training);
         }
-        if (window.quillTutorials) {
-          window.quillTutorials.root.innerHTML = "";
+        if (!editorTutorials) {
+          ClassicEditor
+            .create(document.querySelector('#editTutorialsEditor'))
+            .then(editor => { editorTutorials = editor; editor.setData(user.tutorials); })
+            .catch(error => { console.error(error); });
         } else {
-          window.quillTutorials = new Quill('#editTutorialsEditor', { theme: 'snow' });
+          editorTutorials.setData(user.tutorials);
         }
-        // Load user's existing HTML content (if any) into the editors.
-        window.quillTraining.root.innerHTML = user.training;
-        window.quillTutorials.root.innerHTML = user.tutorials;
       }
     }
 
     document.getElementById('saveEdit').addEventListener('click', async () => {
       const newUsername = document.getElementById('editUsername').value;
       const newPassword = document.getElementById('editPassword').value;
-      // Get HTML content from Quill editors
-      const newTraining = window.quillTraining.root.innerHTML;
-      const newTutorials = window.quillTutorials.root.innerHTML;
-      if(newUsername && newPassword){
+      const newTraining = editorTraining ? editorTraining.getData() : "";
+      const newTutorials = editorTutorials ? editorTutorials.getData() : "";
+      if (newUsername && newPassword) {
         const updatedUser = {
           username: newUsername,
           password: newPassword,
