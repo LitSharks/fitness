@@ -18,6 +18,19 @@
     .login-form input { width: 100%; padding: 0.5em; margin-bottom: 1em; }
     .admin-panel { padding: 1em; background: #efefef; margin-bottom: 1em; }
     .hidden { display: none; }
+    /* Log styling */
+    #log {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      background: #eee;
+      color: #333;
+      font-size: 12px;
+      max-height: 200px;
+      overflow-y: scroll;
+      padding: 10px;
+      box-shadow: 0 -2px 5px rgba(0,0,0,0.2);
+    }
   </style>
 </head>
 <body>
@@ -129,9 +142,20 @@
     </div>
   </div>
 
+  <!-- Log Output Area -->
+  <div id="log"></div>
+
   <!-- Include a browser-friendly version of jsrsasign -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/10.5.23/jsrsasign-all-min.js"></script>
   <script>
+    // Simple logging function to output messages to the log div
+    function logMessage(message) {
+      const logDiv = document.getElementById("log");
+      const msgDiv = document.createElement("div");
+      msgDiv.textContent = message;
+      logDiv.appendChild(msgDiv);
+    }
+
     /********************
      * Google Sheets API Setup
      ********************/
@@ -181,29 +205,36 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
 
     // Function to get an access token using the service account
     async function getAccessToken() {
-      const header = { alg: "RS256", typ: "JWT" };
-      const now = Math.floor(Date.now() / 1000);
-      const claims = {
-        iss: SERVICE_ACCOUNT_EMAIL,
-        scope: SCOPES,
-        aud: TOKEN_URL,
-        iat: now,
-        exp: now + 3600
-      };
-      const sHeader = JSON.stringify(header);
-      const sPayload = JSON.stringify(claims);
-      const privateKey = KEYUTIL.getKey(PRIVATE_KEY);
-      const sJWT = KJUR.jws.JWS.sign("RS256", sHeader, sPayload, privateKey);
-      const formData = new URLSearchParams();
-      formData.append("grant_type", "urn:ietf:params:oauth:grant-type:jwt-bearer");
-      formData.append("assertion", sJWT);
-      const response = await fetch(TOKEN_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: formData.toString()
-      });
-      const data = await response.json();
-      return data.access_token;
+      try {
+        const header = { alg: "RS256", typ: "JWT" };
+        const now = Math.floor(Date.now() / 1000);
+        const claims = {
+          iss: SERVICE_ACCOUNT_EMAIL,
+          scope: SCOPES,
+          aud: TOKEN_URL,
+          iat: now,
+          exp: now + 3600
+        };
+        const sHeader = JSON.stringify(header);
+        const sPayload = JSON.stringify(claims);
+        const privateKey = KEYUTIL.getKey(PRIVATE_KEY);
+        const sJWT = KJUR.jws.JWS.sign("RS256", sHeader, sPayload, privateKey);
+        const formData = new URLSearchParams();
+        formData.append("grant_type", "urn:ietf:params:oauth:grant-type:jwt-bearer");
+        formData.append("assertion", sJWT);
+        logMessage("Requesting access token...");
+        const response = await fetch(TOKEN_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: formData.toString()
+        });
+        const data = await response.json();
+        logMessage("Access token received.");
+        return data.access_token;
+      } catch (e) {
+        logMessage("Error in getAccessToken: " + e.message);
+        throw e;
+      }
     }
 
     /********************
@@ -211,82 +242,110 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
      ********************/
     // Load all users from the sheet and store in allUsers[]
     async function loadUsers() {
-      const token = await getAccessToken();
-      // Use the range directly without encodeURIComponent
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${USERS_RANGE}`;
-      const response = await fetch(url, { headers: { "Authorization": `Bearer ${token}` } });
-      const data = await response.json();
-      allUsers = [];
-      if (data.values) {
-        data.values.forEach((row, index) => {
-          allUsers.push({
-            row: index + 2, // since data starts on row 2
-            username: row[0],
-            password: row[1],
-            training: row[2] || "",
-            tutorials: row[3] || ""
+      try {
+        const token = await getAccessToken();
+        // Use the range directly without encoding
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${USERS_RANGE}`;
+        logMessage("Fetching users data from: " + url);
+        const response = await fetch(url, { headers: { "Authorization": `Bearer ${token}` } });
+        logMessage("Response status: " + response.status);
+        const data = await response.json();
+        logMessage("Users data received: " + JSON.stringify(data));
+        allUsers = [];
+        if (data.values) {
+          data.values.forEach((row, index) => {
+            allUsers.push({
+              row: index + 2, // since data starts on row 2
+              username: row[0],
+              password: row[1],
+              training: row[2] || "",
+              tutorials: row[3] || ""
+            });
           });
-        });
+        }
+      } catch (e) {
+        logMessage("Error in loadUsers: " + e.message);
       }
     }
 
     // Update a user in the sheet at a given row
     async function updateUser(row, userObj) {
-      const token = await getAccessToken();
-      const range = `Users!A${row}:D${row}`;
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?valueInputOption=USER_ENTERED`;
-      const body = JSON.stringify({
-        values: [[userObj.username, userObj.password, userObj.training, userObj.tutorials]]
-      });
-      const response = await fetch(url, {
-        method: "PUT",
-        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
-        body: body
-      });
-      return await response.json();
+      try {
+        const token = await getAccessToken();
+        const range = `Users!A${row}:D${row}`;
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?valueInputOption=USER_ENTERED`;
+        const body = JSON.stringify({
+          values: [[userObj.username, userObj.password, userObj.training, userObj.tutorials]]
+        });
+        logMessage("Updating user at row " + row);
+        const response = await fetch(url, {
+          method: "PUT",
+          headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+          body: body
+        });
+        const result = await response.json();
+        logMessage("Update result: " + JSON.stringify(result));
+        return result;
+      } catch (e) {
+        logMessage("Error in updateUser: " + e.message);
+      }
     }
 
     // Append a new user to the sheet
     async function appendUser(userObj) {
-      const token = await getAccessToken();
-      const range = "Users!A:D";
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
-      const body = JSON.stringify({
-        values: [[userObj.username, userObj.password, userObj.training, userObj.tutorials]]
-      });
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
-        body: body
-      });
-      return await response.json();
+      try {
+        const token = await getAccessToken();
+        const range = "Users!A:D";
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
+        const body = JSON.stringify({
+          values: [[userObj.username, userObj.password, userObj.training, userObj.tutorials]]
+        });
+        logMessage("Appending new user: " + userObj.username);
+        const response = await fetch(url, {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+          body: body
+        });
+        const result = await response.json();
+        logMessage("Append result: " + JSON.stringify(result));
+        return result;
+      } catch (e) {
+        logMessage("Error in appendUser: " + e.message);
+      }
     }
 
     // Delete a user (row) using batchUpdate
     async function deleteUserRow(row) {
-      const token = await getAccessToken();
-      const rowIndex = row - 1; // Convert sheet row number to 0-indexed
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}:batchUpdate`;
-      const body = JSON.stringify({
-        requests: [
-          {
-            deleteDimension: {
-              range: {
-                sheetId: USERS_SHEET_ID,
-                dimension: "ROWS",
-                startIndex: rowIndex,
-                endIndex: rowIndex + 1
+      try {
+        const token = await getAccessToken();
+        const rowIndex = row - 1; // Convert sheet row number to 0-indexed
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}:batchUpdate`;
+        const body = JSON.stringify({
+          requests: [
+            {
+              deleteDimension: {
+                range: {
+                  sheetId: USERS_SHEET_ID,
+                  dimension: "ROWS",
+                  startIndex: rowIndex,
+                  endIndex: rowIndex + 1
+                }
               }
             }
-          }
-        ]
-      });
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
-        body: body
-      });
-      return await response.json();
+          ]
+        });
+        logMessage("Deleting user at row " + row);
+        const response = await fetch(url, {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+          body: body
+        });
+        const result = await response.json();
+        logMessage("Delete result: " + JSON.stringify(result));
+        return result;
+      } catch (e) {
+        logMessage("Error in deleteUserRow: " + e.message);
+      }
     }
 
     /********************
@@ -310,44 +369,39 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       if (user) {
         currentUser = user;
         alert('Login successful!');
-        // Hide login form, show user content with their data
         document.getElementById('loginForm').style.display = 'none';
         document.getElementById('userContent').style.display = 'block';
         document.getElementById('loggedInUser').textContent = username;
         document.getElementById('userTraining').textContent = user.training || "No training plan set.";
         document.getElementById('userTutorials').textContent = user.tutorials || "No tutorials set.";
-        // Reveal the Training and Tutorials tabs, and hide the Login tab
         document.getElementById('navTraining').style.display = 'inline';
         document.getElementById('navTutorials').style.display = 'inline';
         document.getElementById('navLogin').style.display = 'none';
         document.getElementById('logoutLink').style.display = 'inline';
-        // If admin (username "cardio"), show Admin Control tab
         if (username === 'cardio') {
           document.getElementById('navAdmin').style.display = 'inline';
         }
-        // Switch to Training tab after login
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
         document.getElementById('training').classList.add('active');
       } else {
         alert('Invalid username or password.');
+        logMessage("Login failed for username: " + username);
       }
     });
 
     // Logout functionality
     document.getElementById('logoutLink').addEventListener('click', () => {
       currentUser = null;
-      // Hide user-specific tabs and show Login
       document.getElementById('navTraining').style.display = 'none';
       document.getElementById('navTutorials').style.display = 'none';
       document.getElementById('navAdmin').style.display = 'none';
       document.getElementById('navLogin').style.display = 'inline';
       document.getElementById('logoutLink').style.display = 'none';
-      // Reset login view
       document.getElementById('loginForm').style.display = 'block';
       document.getElementById('userContent').style.display = 'none';
-      // Switch back to Login tab
       document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
       document.getElementById('login').classList.add('active');
+      logMessage("User logged out.");
     });
 
     /********************
@@ -364,6 +418,7 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       });
       output += '</ul>';
       document.getElementById('userList').innerHTML = output;
+      logMessage("Admin panel loaded users.");
     });
 
     // Add a new user via admin panel
@@ -379,6 +434,7 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
         document.getElementById('loadUsers').click();
       } else {
         alert('Please enter both username and password.');
+        logMessage("Failed to add user; missing username or password.");
       }
     });
 
@@ -402,6 +458,7 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
         document.getElementById('editPassword').value = user.password;
         document.getElementById('editTraining').value = user.training;
         document.getElementById('editTutorials').value = user.tutorials;
+        logMessage("Editing user: " + user.username);
       }
     }
 
@@ -424,11 +481,13 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
         document.getElementById('loadUsers').click();
       } else {
         alert("Please fill in all fields.");
+        logMessage("Failed to save edit; missing fields.");
       }
     });
 
     document.getElementById('cancelEdit').addEventListener('click', () => {
       document.getElementById('editUser').style.display = 'none';
+      logMessage("Edit canceled.");
     });
   </script>
 </body>
