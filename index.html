@@ -52,7 +52,7 @@
           </tr>
         </thead>
         <tbody id="trainingTableBody">
-          <!-- Default training plan (can be updated later) -->
+          <!-- Default training plan row -->
           <tr>
             <td>T1</td>
             <td>Off</td>
@@ -167,7 +167,7 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
     const TOKEN_URL = "https://oauth2.googleapis.com/token";
     const SCOPES = "https://www.googleapis.com/auth/spreadsheets";
     const SPREADSHEET_ID = "1aHnKAI9lNw8-ewOjwKV9XAwt8u10qU2C_OTFSoJCwe8";
-    // Update USERS_RANGE to specify an ending row
+    // Use a fixed range ending row for users data
     const USERS_RANGE = "Users!A2:D1000";
     // The sheetId for the "Users" tab – update if needed (gid from URL)
     const USERS_SHEET_ID = 0; 
@@ -212,8 +212,8 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
     // Load all users from the sheet and store in allUsers[]
     async function loadUsers() {
       const token = await getAccessToken();
-      // URL-encode the range to handle special characters (like !)
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(USERS_RANGE)}`;
+      // Use the range directly without encodeURIComponent
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${USERS_RANGE}`;
       const response = await fetch(url, { headers: { "Authorization": `Bearer ${token}` } });
       const data = await response.json();
       allUsers = [];
