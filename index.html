@@ -3,21 +3,33 @@
 <head>
   <meta charset="UTF-8">
   <title>Fitness Coaching Program</title>
-  <!-- CKEditor 5 Classic Build -->
+  <!-- CKEditor 5 Classic Build for admin editing -->
   <script src="https://cdn.ckeditor.com/ckeditor5/35.0.1/classic/ckeditor.js"></script>
   <style>
-    /* Global styling for a minimalistic, modern look */
+    /* Global styling for a minimalistic, modern feel */
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
       padding: 0;
       background: #f7f7f7;
       color: #333;
+      transition: background 0.3s, color 0.3s;
+    }
+    body.dark-mode {
+      background: #222;
+      color: #ddd;
     }
     header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       background: #222;
       color: #fff;
       padding: 1em;
+    }
+    header nav {
+      display: flex;
+      align-items: center;
     }
     header nav a {
       color: #fff;
@@ -26,6 +38,77 @@
       font-weight: 600;
       cursor: pointer;
     }
+    header .header-right {
+      display: flex;
+      align-items: center;
+    }
+    header img.logo {
+      height: 40px;
+      margin-right: 1em;
+    }
+    header button.settings-btn {
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 20px;
+      cursor: pointer;
+    }
+    /* Settings popover */
+    .settings-popover {
+      position: absolute;
+      top: 60px;
+      right: 20px;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 1em;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      display: none;
+      z-index: 100;
+    }
+    .settings-popover.dark-mode {
+      background: #333;
+      color: #ddd;
+      border-color: #444;
+    }
+    /* Dark/light toggle switch (iOS style) */
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #ccc;
+      transition: 0.4s;
+      border-radius: 24px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      transition: 0.4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: #66bb6a;
+    }
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+    /* Tab content styling */
     .tab-content {
       display: none;
       padding: 1.5em;
@@ -60,59 +143,81 @@
       border-radius: 5px;
       margin-bottom: 1em;
     }
-    /* Table styling for user view (and any pasted tables) */
-    table {
+    /* Ensure tables in user content show borders */
+    #displayTraining table,
+    #displayTraining th,
+    #displayTraining td,
+    #displayTutorials table,
+    #displayTutorials th,
+    #displayTutorials td {
+      border: 1px solid #ddd !important;
       border-collapse: collapse;
-      width: 100%;
-      margin-bottom: 1em;
     }
-    table, th, td {
-      border: 1px solid #ddd;
-    }
-    th, td {
+    #displayTraining th,
+    #displayTutorials th,
+    #displayTraining td,
+    #displayTutorials td {
       padding: 8px;
       text-align: center;
     }
-    tr:nth-child(even) {
-      background-color: #f9f9f9;
+    /* Notification popup styling */
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #66bb6a;
+      color: #fff;
+      padding: 1em 1.5em;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      opacity: 0;
+      transition: opacity 0.5s;
+      z-index: 200;
     }
-    tr:hover {
-      background-color: #f1f1f1;
+    .notification.show {
+      opacity: 1;
     }
-    /* CKEditor container styling */
-    .editor-container {
-      border: 1px solid #ccc;
-      min-height: 200px;
-      border-radius: 3px;
+    /* Contact tab styling */
+    #contact {
+      padding: 1.5em;
+      background: #fff;
+      margin: 1em auto;
+      max-width: 900px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-radius: 5px;
     }
   </style>
 </head>
 <body>
   <header>
     <nav>
-      <!-- Only the Login tab is visible until a successful login -->
+      <!-- Navigation (Login and Contact are visible by default) -->
+      <a data-tab="login" class="tab-link" id="navLogin">Login</a>
+      <a data-tab="contact" class="tab-link" id="navContact">Contact</a>
+      <!-- These tabs are hidden until login -->
       <a data-tab="training" class="tab-link" id="navTraining" style="display:none;">Training</a>
       <a data-tab="tutorials" class="tab-link" id="navTutorials" style="display:none;">Tutorials</a>
-      <a data-tab="login" class="tab-link" id="navLogin">Login</a>
+      <!-- Admin Control (hidden until admin logs in) -->
       <a data-tab="admin" class="tab-link" id="navAdmin" style="display:none;">Admin Control</a>
       <a id="logoutLink" style="display:none; cursor:pointer; color:#fff; margin-left:1em;">Logout</a>
     </nav>
+    <div class="header-right">
+      <!-- Logo on top right -->
+      <img src="logo.png" alt="Logo" class="logo">
+      <!-- Settings button -->
+      <button class="settings-btn" id="settingsBtn">&#9881;</button>
+      <!-- Settings popover -->
+      <div class="settings-popover" id="settingsPopover">
+        <label for="modeSwitch">Dark Mode:</label>
+        <label class="toggle-switch">
+          <input type="checkbox" id="modeSwitch">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
   </header>
 
-  <!-- Training Tab (User View) -->
-  <div id="training" class="tab-content">
-    <h2>Your Training Plan</h2>
-    <!-- This div will display the saved (HTML formatted) training plan -->
-    <div id="displayTraining"></div>
-  </div>
-
-  <!-- Tutorials Tab (User View) -->
-  <div id="tutorials" class="tab-content">
-    <h2>Your Tutorials</h2>
-    <!-- This div will display the saved (HTML formatted) tutorials -->
-    <div id="displayTutorials"></div>
-  </div>
-
+  <!-- Tab Contents -->
   <!-- Login Tab -->
   <div id="login" class="tab-content active">
     <h2>User Login</h2>
@@ -121,6 +226,27 @@
       <input type="password" id="password" placeholder="Password" />
       <button id="loginBtn">Login</button>
     </div>
+  </div>
+
+  <!-- Training Tab (User View) -->
+  <div id="training" class="tab-content">
+    <h2>Your Training Plan</h2>
+    <div id="displayTraining"></div>
+  </div>
+
+  <!-- Tutorials Tab (User View) -->
+  <div id="tutorials" class="tab-content">
+    <h2>Your Tutorials</h2>
+    <div id="displayTutorials"></div>
+  </div>
+
+  <!-- Contact Tab (Public) -->
+  <div id="contact" class="tab-content">
+    <h2>Contact</h2>
+    <p><strong>Fitness Coach:</strong></p>
+    <p>Email: temp</p>
+    <p>Phone: temp</p>
+    <p>Web: temp</p>
   </div>
 
   <!-- Admin Control Tab -->
@@ -140,17 +266,18 @@
       <input type="text" id="editUsername" placeholder="Username" /><br>
       <input type="text" id="editPassword" placeholder="Password" /><br>
       <h4>Training Plan</h4>
-      <!-- CKEditor container for Training Plan -->
       <div id="editTrainingEditor" class="editor-container"></div>
       <h4>Tutorials</h4>
-      <!-- CKEditor container for Tutorials -->
       <div id="editTutorialsEditor" class="editor-container"></div>
       <button id="saveEdit">Save Changes</button>
       <button id="cancelEdit">Cancel</button>
     </div>
   </div>
 
-  <!-- Include a browser-friendly version of jsrsasign -->
+  <!-- Notification Container (dynamically inserted) -->
+  <div id="notificationContainer"></div>
+
+  <!-- Include jsrsasign -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/10.5.23/jsrsasign-all-min.js"></script>
   <script>
     /********************
@@ -190,16 +317,12 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
     const TOKEN_URL = "https://oauth2.googleapis.com/token";
     const SCOPES = "https://www.googleapis.com/auth/spreadsheets";
     const SPREADSHEET_ID = "1aHnKAI9lNw8-ewOjwKV9XAwt8u10qU2C_OTFSoJCwe8";
-    // Define the range for user data (headers in row 1)
     const USERS_RANGE = `${SHEET_NAME}!A2:D1000`;
-    // Sheet ID for the "Users" tab (adjust if needed)
     const USERS_SHEET_ID = 0;
 
     let allUsers = [];
     let currentUser = null;
     let currentEditRow = null;
-
-    // Global CKEditor instances for admin editing
     let editorTraining, editorTutorials;
 
     /********************
@@ -307,9 +430,55 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
     }
 
     /********************
-     * UI and Login Functions
+     * Notification Function
      ********************/
-    // Tab switching
+    function showNotification(message) {
+      const notification = document.createElement("div");
+      notification.className = "notification";
+      notification.textContent = message;
+      document.body.appendChild(notification);
+      setTimeout(() => {
+        notification.classList.add("show");
+      }, 100);
+      setTimeout(() => {
+        notification.classList.remove("show");
+        setTimeout(() => {
+          document.body.removeChild(notification);
+        }, 500);
+      }, 2000);
+    }
+
+    /********************
+     * Settings Popover & Dark Mode
+     ********************/
+    const settingsBtn = document.getElementById("settingsBtn");
+    const settingsPopover = document.getElementById("settingsPopover");
+    const modeSwitch = document.getElementById("modeSwitch");
+
+    // Toggle popover visibility
+    settingsBtn.addEventListener("click", () => {
+      settingsPopover.style.display = settingsPopover.style.display === "block" ? "none" : "block";
+    });
+
+    // Set initial mode based on browser preference
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      modeSwitch.checked = true;
+      document.body.classList.add("dark-mode");
+    }
+
+    modeSwitch.addEventListener("change", () => {
+      if (modeSwitch.checked) {
+        document.body.classList.add("dark-mode");
+        settingsPopover.classList.add("dark-mode");
+      } else {
+        document.body.classList.remove("dark-mode");
+        settingsPopover.classList.remove("dark-mode");
+      }
+    });
+
+    /********************
+     * Tab Switching
+     ********************/
     document.querySelectorAll('.tab-link').forEach(link => {
       link.addEventListener('click', () => {
         const tabId = link.getAttribute('data-tab');
@@ -318,7 +487,9 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       });
     });
 
-    // Login
+    /********************
+     * User Login & Display
+     ********************/
     document.getElementById('loginBtn').addEventListener('click', async () => {
       await loadUsers();
       const username = document.getElementById('username').value;
@@ -326,25 +497,26 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       const user = allUsers.find(u => u.username === username && u.password === password);
       if (user) {
         currentUser = user;
-        alert('Login successful!');
+        showNotification("Login successful!");
+        // Reveal user tabs and hide login
         document.getElementById('navTraining').style.display = 'inline';
         document.getElementById('navTutorials').style.display = 'inline';
+        document.getElementById('navContact').style.display = 'inline';
         document.getElementById('navLogin').style.display = 'none';
         document.getElementById('logoutLink').style.display = 'inline';
         if (username === 'cardio') {
           document.getElementById('navAdmin').style.display = 'inline';
         }
-        // Display user-specific content (render HTML)
+        // Set user-specific content (rendered as HTML)
         document.getElementById('displayTraining').innerHTML = user.training || "<p>No training plan set.</p>";
         document.getElementById('displayTutorials').innerHTML = user.tutorials || "<p>No tutorials set.</p>";
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
         document.getElementById('training').classList.add('active');
       } else {
-        alert('Invalid username or password.');
+        showNotification("Invalid username or password.");
       }
     });
 
-    // Logout
     document.getElementById('logoutLink').addEventListener('click', () => {
       currentUser = null;
       document.getElementById('navTraining').style.display = 'none';
@@ -384,19 +556,19 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
           tutorials: "<p>Default tutorials.</p>" 
         };
         await appendUser(newUser);
-        alert('User added.');
+        showNotification("User added.");
         document.getElementById('newUsername').value = '';
         document.getElementById('newPassword').value = '';
         document.getElementById('loadUsers').click();
       } else {
-        alert('Please enter both username and password.');
+        showNotification("Please enter both username and password.");
       }
     });
 
     async function deleteUser(row) {
       if (confirm("Are you sure you want to delete this user?")) {
         await deleteUserRow(row);
-        alert("User deleted.");
+        showNotification("User deleted.");
         document.getElementById('loadUsers').click();
       }
     }
@@ -409,24 +581,18 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
         document.getElementById('editUsernameDisplay').textContent = user.username;
         document.getElementById('editUsername').value = user.username;
         document.getElementById('editPassword').value = user.password;
-        // Initialize CKEditor for Training Plan if not already initialized
+        // Initialize or update CKEditor for Training Plan
         if (!editorTraining) {
           ClassicEditor.create(document.querySelector('#editTrainingEditor'))
-            .then(editor => {
-              editorTraining = editor;
-              editorTraining.setData(user.training);
-            })
+            .then(editor => { editorTraining = editor; editorTraining.setData(user.training); })
             .catch(error => { console.error(error); });
         } else {
           editorTraining.setData(user.training);
         }
-        // Initialize CKEditor for Tutorials if not already initialized
+        // Initialize or update CKEditor for Tutorials
         if (!editorTutorials) {
           ClassicEditor.create(document.querySelector('#editTutorialsEditor'))
-            .then(editor => {
-              editorTutorials = editor;
-              editorTutorials.setData(user.tutorials);
-            })
+            .then(editor => { editorTutorials = editor; editorTutorials.setData(user.tutorials); })
             .catch(error => { console.error(error); });
         } else {
           editorTutorials.setData(user.tutorials);
@@ -447,11 +613,11 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
           tutorials: newTutorials
         };
         await updateUser(currentEditRow, updatedUser);
-        alert("User updated.");
+        showNotification("User updated.");
         document.getElementById('editUser').style.display = 'none';
         document.getElementById('loadUsers').click();
       } else {
-        alert("Please fill in all fields.");
+        showNotification("Please fill in all fields.");
       }
     });
 
