@@ -52,7 +52,7 @@
           </tr>
         </thead>
         <tbody id="trainingTableBody">
-          <!-- You could load a default or global training plan here -->
+          <!-- Default training plan (can be updated later) -->
           <tr>
             <td>T1</td>
             <td>Off</td>
@@ -167,8 +167,8 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
     const TOKEN_URL = "https://oauth2.googleapis.com/token";
     const SCOPES = "https://www.googleapis.com/auth/spreadsheets";
     const SPREADSHEET_ID = "1aHnKAI9lNw8-ewOjwKV9XAwt8u10qU2C_OTFSoJCwe8";
-    // Range for users data (assumes headers in row 1)
-    const USERS_RANGE = "Users!A2:D";
+    // Update USERS_RANGE to specify an ending row
+    const USERS_RANGE = "Users!A2:D1000";
     // The sheetId for the "Users" tab – update if needed (gid from URL)
     const USERS_SHEET_ID = 0; 
 
