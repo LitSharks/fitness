@@ -4,89 +4,40 @@
   <meta charset="UTF-8">
   <title>Fitness Coaching Program</title>
   <style>
-    /* Basic styling for the website */
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-    }
-    header {
-      background: #333;
-      color: #fff;
-      padding: 1em;
-    }
-    header nav a {
-      color: #fff;
-      text-decoration: none;
-      margin-right: 1em;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    .tab-content {
-      display: none;
-      padding: 1em;
-    }
-    .tab-content.active {
-      display: block;
-    }
-    .info-box {
-      position: fixed;
-      right: 0;
-      top: 60px;
-      background: #f9f9f9;
-      border-left: 2px solid #ccc;
-      padding: 1em;
-      width: 300px;
-      max-height: 80%;
-      overflow-y: auto;
-    }
-    .table-container {
-      overflow-x: auto;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 1em;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 0.5em;
-      text-align: center;
-    }
-    /* Login form styles */
-    .login-form {
-      max-width: 300px;
-      margin: 1em auto;
-      border: 1px solid #ccc;
-      padding: 1em;
-      border-radius: 5px;
-    }
-    .login-form input {
-      width: 100%;
-      padding: 0.5em;
-      margin-bottom: 1em;
-    }
-    .admin-panel {
-      padding: 1em;
-      background: #efefef;
-    }
+    /* Basic styling */
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    header { background: #333; color: #fff; padding: 1em; }
+    header nav a { color: #fff; text-decoration: none; margin-right: 1em; font-weight: bold; cursor: pointer; }
+    .tab-content { display: none; padding: 1em; }
+    .tab-content.active { display: block; }
+    .info-box { position: fixed; right: 0; top: 60px; background: #f9f9f9; border-left: 2px solid #ccc; padding: 1em; width: 300px; max-height: 80%; overflow-y: auto; }
+    .table-container { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 1em; }
+    th, td { border: 1px solid #ccc; padding: 0.5em; text-align: center; }
+    .login-form { max-width: 300px; margin: 1em auto; border: 1px solid #ccc; padding: 1em; border-radius: 5px; }
+    .login-form input { width: 100%; padding: 0.5em; margin-bottom: 1em; }
+    .admin-panel { padding: 1em; background: #efefef; margin-bottom: 1em; }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
   <header>
     <nav>
-      <a data-tab="training" class="tab-link">Training Plan</a>
-      <a data-tab="tutorials" class="tab-link">Tutorials</a>
-      <a data-tab="login" class="tab-link">Login</a>
-      <a data-tab="admin" class="tab-link" id="adminTab" style="display:none;">Admin Panel</a>
+      <!-- These tabs are hidden until login -->
+      <a data-tab="training" class="tab-link" id="navTraining" style="display:none;">Training Plan</a>
+      <a data-tab="tutorials" class="tab-link" id="navTutorials" style="display:none;">Tutorials</a>
+      <!-- Login is visible initially -->
+      <a data-tab="login" class="tab-link" id="navLogin">Login</a>
+      <!-- Admin control is hidden until an admin logs in -->
+      <a data-tab="admin" class="tab-link" id="navAdmin" style="display:none;">Admin Control</a>
+      <a id="logoutLink" style="display:none; cursor:pointer; color:#fff; margin-left:1em;">Logout</a>
     </nav>
   </header>
 
   <!-- Training Plan Tab -->
-  <div id="training" class="tab-content active">
+  <div id="training" class="tab-content">
     <h2>Stamina Training Plan - 5 Weeks</h2>
     <div class="table-container">
-      <!-- Example training plan table -->
       <table>
         <thead>
           <tr>
@@ -100,7 +51,8 @@
             <th>SU</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody id="trainingTableBody">
+          <!-- Sample row (can be dynamically updated via the API later) -->
           <tr>
             <td>T1</td>
             <td>Off</td>
@@ -111,11 +63,9 @@
             <td>Off</td>
             <td>45-55 min Long Run</td>
           </tr>
-          <!-- Additional rows for Weeks 2-5 can be added here -->
         </tbody>
       </table>
     </div>
-    <!-- Info box for training notes -->
     <div class="info-box">
       <h3>Notes</h3>
       <p><strong>X-train</strong> (cross train) means to do something other than running but still targets the legs (e.g., biking, swimming, etc.).</p>
@@ -128,7 +78,7 @@
   <!-- Tutorials Tab -->
   <div id="tutorials" class="tab-content">
     <h2>Tutorials</h2>
-    <ul>
+    <ul id="tutorialList">
       <li><a href="https://www.youtube.com/watch?v=k5vqiyry2z8" target="_blank">Tempo Run</a></li>
       <li><a href="https://www.youtube.com/watch?v=L_vZjikr5Ew" target="_blank">Breathing Easier</a></li>
       <li><a href="https://www.youtube.com/watch?v=Z3crT2UBeJE" target="_blank">Fartlek Run</a></li>
@@ -137,206 +87,192 @@
     </ul>
   </div>
 
-  <!-- User Login & Personalized Plan Tab -->
-  <div id="login" class="tab-content">
+  <!-- Login Tab -->
+  <div id="login" class="tab-content active">
     <h2>User Login</h2>
-    <div class="login-form">
+    <div class="login-form" id="loginForm">
       <input type="text" id="username" placeholder="Username" />
       <input type="password" id="password" placeholder="Password" />
       <button id="loginBtn">Login</button>
     </div>
-    <div id="userPlan" style="display:none;">
-      <h3>Your Personalized Fitness Plan</h3>
-      <!-- You can later load this dynamically using the Sheets API -->
-      <p>This is your personalized plan. (For now, static content or fetched via API)</p>
+    <div id="userContent" style="display:none;">
+      <h3>Welcome, <span id="loggedInUser"></span>!</h3>
+      <p>This is your personalized fitness plan content.</p>
+      <!-- Future: load user-specific training plan and tutorials here -->
     </div>
   </div>
 
-  <!-- Admin Control Panel Tab -->
+  <!-- Admin Control Tab -->
   <div id="admin" class="tab-content">
     <h2>Admin Control Panel</h2>
     <div class="admin-panel">
       <button id="loadUsers">Load Users</button>
       <div id="userList"></div>
-      <h3>Add/Edit User</h3>
-      <input type="text" id="adminUsername" placeholder="Username" />
-      <input type="text" id="adminPassword" placeholder="Password" /> <!-- Note: In production, passwords must be securely hashed! -->
-      <button id="saveUser">Save User</button>
+      <h3>Add New User</h3>
+      <input type="text" id="newUsername" placeholder="New Username" />
+      <input type="text" id="newPassword" placeholder="New Password" />
+      <button id="addUser">Add User</button>
+    </div>
+    <!-- User Editing Page (hidden by default) -->
+    <div id="editUser" style="display:none;">
+      <h3>Edit User: <span id="editUsernameDisplay"></span></h3>
+      <input type="text" id="editUsername" placeholder="Username" /><br>
+      <input type="text" id="editPassword" placeholder="Password" /><br>
+      <h4>Training Plan</h4>
+      <textarea id="editTraining" rows="6" cols="50"></textarea><br>
+      <h4>Tutorials</h4>
+      <textarea id="editTutorials" rows="6" cols="50"></textarea><br>
+      <button id="saveEdit">Save Changes</button>
+      <button id="cancelEdit">Cancel</button>
     </div>
   </div>
 
-  <!-- API Functionality (Google Sheets API example) -->
-  <!-- Include jsrsasign for JWT signing (for client-side Sheets API calls) -->
+  <!-- Include jsrsasign for Google Sheets API functionality if needed -->
   <script src="https://cdn.jsdelivr.net/npm/jsrsasign"></script>
   <script>
-    // Service account details (client-side version, not secure for production)
-    const SERVICE_ACCOUNT_EMAIL = "service-account@fitness-coaching-api.iam.gserviceaccount.com";
-    const PRIVATE_KEY = `-----BEGIN PRIVATE KEY-----
-MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCs4H5Hh6v2tsqo
-Z6MxKPprhhJr9TTCyvS/H+fL/Az4ngOAxEK0h054osWUa5lUzU7MZUFAszLmUiJZ
-qR+AKXqLtCtvbaGiRO7vyvI6zg+8JU3LdyKDxaYoJqD+/ZBI7vN+SCjxWla5V/bG
-psJKpMXyTyXMn8hqMxyzQ696LZ1rAiSR1AWosslfw2TCFFzDmZeqH8H3c4G1FZIJ
-dYt9+cGZYN7R2bhDWL2aRlXMJJXuC39P8zGojXVdZ+fKv1eiG/fhSRW6ddEJTror
-NsCNwIyQnpx1IQkq4lMMsgsOkwSNp56QtLVeTRkvtqsymBdF2fGWtCK+LWsXbIgj
-+BribK+NAgMBAAECggEAEQXRAW+fU/2XUoJT/Cr+D5jl1voP7i9obqpwW3Jv/4ol
-q6gHrnmVVUUn4e+/ay2FORSuWnXayPmk9sGzv521+qwsy73WmOEjSvrno7k3LO5a
-bPLH9ARCEnmNSFaE/t2CnfhyiaN83ybFfrWcc5eqgyvee7nvFOAADznWvVfhBJCJ
-qEHV93niS4bHyO42S/dfwJCB9bH0LNuuDwkBo4ucAYzkltATDZdBtFFIH3KLuzgr
-Wv99PhJnVxoakrXqHkIyS638m+c1fqztYm2icHkgPFYbLSW3KOWBoU41iGLNioS6
-wkB47mAH0W+krRUHM5RXcaRW/7Uus7kXELmlJfCK6QKBgQDiotyiGvDXxhRBTyZv
-LJOZNJJ5Ux3mqiSS2HAB5B2B8Yeum1K4KxyqcYOC6JQioqNkH/WBX3vlWcGTATbx
-YfgQX6WU7YCByX/CrJ5QChll/YLFIz6mLyjPyPWbt32CiDSSU6AQi4NLaXCJOhlN
-4ihkohj3s+jrXoEfHfKZjYGFiQKBgQDDRocxhIAme+EM/MXK/Zzt7d7TCElF/3Pp
-MiZO0WsMZ9rZU+LzX7evP1+aCvCc9RGplgIkVl8/66G+DIGNoEIID3y23Xzs31WT
-C8o4eelP1TcN3apmczGpeWViuzUgsrydV4+iGiVnaFZLMtn/Fpz4jQlYhRGObwhb
-nMxvYztc5QKBgQDAJCc93+1UYgCGJh6Fnps8BlAwQAFXr+P2Az1ivQ0vP6AyrkiB
-DzvsXPSMJbaBbrVri5TOrC8UEPaGNT9pgg+Xgh+VlY2fez+vwj0tyoIh773QeMMC
-jXTiRJPGAtiLtAIuFGvd2wnjA29/SBxv5U8tkifsyUCtW5/Iy9ED0e5/UQKBgQCp
-lpLKulvhECy+7reINwEW0UJ22/dmxxePKnKCePUS7Q7vNx8eZb5MgCkyytV0OpGA
-SjrJ/Aj0plrthkbtDITMI0cYOPrJbJwQ/Gg+7AFnx6/sZtoZ52j12evm9taI8zFD
-JEwlZ7ecOszWue8Azk68vR+ktMwuetczWNVi1zcy0QKBgCv30zzEtv/uEmW4Uh1d
-rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
-6WxeGq4ufJup8vQrIn0l6F/OYxB118Z2G4Iz9F87jcUM6PYOfUwJt1g9CuUmzmSH
-7/TjHERfIzWM9qI+/ha6ZlIy
------END PRIVATE KEY-----
-`;
-    const TOKEN_URL = "https://oauth2.googleapis.com/token";
-    const SCOPES = "https://www.googleapis.com/auth/spreadsheets";
-    // Your spreadsheet ID (set earlier)
-    const SPREADSHEET_ID = "1aHnKAI9lNw8-ewOjwKV9XAwt8u10qU2C_OTFSoJCwe8";
-    // For demonstration, using the same range as in the training plan table
-    const SHEET_RANGE = "Sheet1!A1:D5";
-
-    async function getAccessToken() {
-      const header = { alg: "RS256", typ: "JWT" };
-      const now = Math.floor(Date.now() / 1000);
-      const claims = {
-        iss: SERVICE_ACCOUNT_EMAIL,
-        scope: SCOPES,
-        aud: TOKEN_URL,
-        iat: now,
-        exp: now + 3600
-      };
-
-      const sHeader = JSON.stringify(header);
-      const sPayload = JSON.stringify(claims);
-      const privateKey = KEYUTIL.getKey(PRIVATE_KEY);
-      const sJWT = KJUR.jws.JWS.sign("RS256", sHeader, sPayload, privateKey);
-
-      const formData = new URLSearchParams();
-      formData.append("grant_type", "urn:ietf:params:oauth:grant-type:jwt-bearer");
-      formData.append("assertion", sJWT);
-
-      const response = await fetch(TOKEN_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: formData.toString()
-      });
-
-      const data = await response.json();
-      return data.access_token;
-    }
-
-    // Example functions to read and write data to the Google Sheet.
-    async function readData() {
-      try {
-        const token = await getAccessToken();
-        const range = encodeURIComponent(SHEET_RANGE);
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}`;
-
-        const response = await fetch(url, {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
-
-        const data = await response.json();
-        console.log("Sheet data:", data);
-      } catch (error) {
-        console.error("Error reading data:", error);
+    // In-memory storage for demo (not persistent)
+    let users = {
+      "cardio": "guy",   // Admin credentials
+      "user1": "password1"
+    };
+    let userData = {
+      "user1": {
+        training: "Default training plan for user1.",
+        tutorials: "Default tutorials for user1."
       }
-    }
-
-    async function writeData() {
-      try {
-        const token = await getAccessToken();
-        const range = encodeURIComponent(SHEET_RANGE);
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?valueInputOption=USER_ENTERED`;
-
-        const newValues = {
-          range: SHEET_RANGE,
-          values: [["Hello", "From", "Client", "Side"]]
-        };
-
-        const response = await fetch(url, {
-          method: "PUT",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(newValues)
-        });
-
-        const result = await response.json();
-        console.log("Write result:", result);
-      } catch (error) {
-        console.error("Error writing data:", error);
-      }
-    }
+    };
+    let currentUser = null;
 
     // Tab switching logic
     document.querySelectorAll('.tab-link').forEach(link => {
       link.addEventListener('click', () => {
         const tabId = link.getAttribute('data-tab');
-        document.querySelectorAll('.tab-content').forEach(tab => {
-          tab.classList.remove('active');
-        });
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
         document.getElementById(tabId).classList.add('active');
       });
     });
 
-    // Simple login functionality (demo only)
-    const users = { "user1": "password1", "admin": "adminpass" };
-
+    // Login functionality
     document.getElementById('loginBtn').addEventListener('click', () => {
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
       if (users[username] && users[username] === password) {
+        currentUser = username;
         alert('Login successful!');
-        // Hide login form and show personalized plan
-        document.querySelector('#login .login-form').style.display = 'none';
-        document.getElementById('userPlan').style.display = 'block';
-        // If user is admin, reveal Admin Panel tab
-        if (username === 'admin') {
-          document.getElementById('adminTab').style.display = 'inline';
+        // Hide login form and show personalized content
+        document.getElementById('loginForm').style.display = 'none';
+        document.getElementById('userContent').style.display = 'block';
+        document.getElementById('loggedInUser').textContent = username;
+        // Reveal the Training and Tutorials tabs
+        document.getElementById('navTraining').style.display = 'inline';
+        document.getElementById('navTutorials').style.display = 'inline';
+        // Hide the Login tab and show Logout link
+        document.getElementById('navLogin').style.display = 'none';
+        document.getElementById('logoutLink').style.display = 'inline';
+        // If admin, also show the Admin Control tab
+        if(username === 'cardio'){
+          document.getElementById('navAdmin').style.display = 'inline';
         }
+        // Switch to Training tab after login
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.getElementById('training').classList.add('active');
       } else {
         alert('Invalid username or password.');
       }
     });
 
-    // Basic admin functionality for demo
+    // Logout functionality
+    document.getElementById('logoutLink').addEventListener('click', () => {
+      currentUser = null;
+      // Hide user-specific tabs
+      document.getElementById('navTraining').style.display = 'none';
+      document.getElementById('navTutorials').style.display = 'none';
+      document.getElementById('navAdmin').style.display = 'none';
+      // Show Login tab again
+      document.getElementById('navLogin').style.display = 'inline';
+      document.getElementById('logoutLink').style.display = 'none';
+      // Reset login view
+      document.getElementById('loginForm').style.display = 'block';
+      document.getElementById('userContent').style.display = 'none';
+      // Switch back to Login tab
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.getElementById('login').classList.add('active');
+    });
+
+    // Admin panel functions
     document.getElementById('loadUsers').addEventListener('click', () => {
       let output = '<ul>';
       for (const user in users) {
-        output += `<li>${user} - ${users[user]}</li>`;
+        output += `<li>${user} - ${users[user]} 
+          <button onclick="editUser('${user}')">Edit</button> 
+          <button onclick="deleteUser('${user}')">Delete</button></li>`;
       }
       output += '</ul>';
       document.getElementById('userList').innerHTML = output;
     });
 
-    document.getElementById('saveUser').addEventListener('click', () => {
-      const username = document.getElementById('adminUsername').value;
-      const password = document.getElementById('adminPassword').value;
-      if (username && password) {
-        users[username] = password;
-        alert('User saved.');
+    document.getElementById('addUser').addEventListener('click', () => {
+      const newUsername = document.getElementById('newUsername').value;
+      const newPassword = document.getElementById('newPassword').value;
+      if(newUsername && newPassword){
+        users[newUsername] = newPassword;
+        // Initialize default content for the new user
+        userData[newUsername] = {
+          training: "Default training plan.",
+          tutorials: "Default tutorials."
+        };
+        alert('User added.');
+        document.getElementById('newUsername').value = '';
+        document.getElementById('newPassword').value = '';
+        document.getElementById('loadUsers').click();
       } else {
         alert('Please enter both username and password.');
       }
     });
 
-    // For testing: Uncomment to call API functions
-    // readData();
-    // writeData();
+    function deleteUser(username) {
+      if (confirm(`Are you sure you want to delete ${username}?`)) {
+        delete users[username];
+        delete userData[username];
+        document.getElementById('loadUsers').click();
+      }
+    }
+
+    function editUser(username) {
+      // Show the editing section and populate fields with the user's current data
+      document.getElementById('editUser').style.display = 'block';
+      document.getElementById('editUsernameDisplay').textContent = username;
+      document.getElementById('editUsername').value = username;
+      document.getElementById('editPassword').value = users[username];
+      document.getElementById('editTraining').value = userData[username] ? userData[username].training : "";
+      document.getElementById('editTutorials').value = userData[username] ? userData[username].tutorials : "";
+    }
+
+    document.getElementById('saveEdit').addEventListener('click', () => {
+      const oldUsername = document.getElementById('editUsernameDisplay').textContent;
+      const newUsername = document.getElementById('editUsername').value;
+      const newPassword = document.getElementById('editPassword').value;
+      const newTraining = document.getElementById('editTraining').value;
+      const newTutorials = document.getElementById('editTutorials').value;
+      
+      // Update credentials and content; if username changed, update keys accordingly
+      if(newUsername !== oldUsername){
+        users[newUsername] = newPassword;
+        delete users[oldUsername];
+        userData[newUsername] = { training: newTraining, tutorials: newTutorials };
+        delete userData[oldUsername];
+      } else {
+        users[newUsername] = newPassword;
+        userData[newUsername] = { training: newTraining, tutorials: newTutorials };
+      }
+      alert('User updated.');
+      document.getElementById('editUser').style.display = 'none';
+      document.getElementById('loadUsers').click();
+    });
+
+    document.getElementById('cancelEdit').addEventListener('click', () => {
+      document.getElementById('editUser').style.display = 'none';
+    });
   </script>
 </body>
 </html>
