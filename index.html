@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <title>Fitness Coaching Program</title>
+  <!-- Quill CSS for rich text editing -->
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
   <style>
     /* Basic styling */
     body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
@@ -17,19 +19,10 @@
     .login-form { max-width: 300px; margin: 1em auto; border: 1px solid #ccc; padding: 1em; border-radius: 5px; }
     .login-form input { width: 100%; padding: 0.5em; margin-bottom: 1em; }
     .admin-panel { padding: 1em; background: #efefef; margin-bottom: 1em; }
-    .hidden { display: none; }
-    /* Log styling */
-    #log {
-      position: fixed;
-      bottom: 0;
-      width: 100%;
-      background: #eee;
-      color: #333;
-      font-size: 12px;
-      max-height: 200px;
-      overflow-y: scroll;
-      padding: 10px;
-      box-shadow: 0 -2px 5px rgba(0,0,0,0.2);
+    /* Styling for the Quill editor containers */
+    .quill-editor {
+      height: 200px;
+      margin-bottom: 1em;
     }
   </style>
 </head>
@@ -49,36 +42,10 @@
 
   <!-- Training Plan Tab -->
   <div id="training" class="tab-content">
-    <h2>Stamina Training Plan - 5 Weeks</h2>
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>Week</th>
-            <th>M</th>
-            <th>TU</th>
-            <th>W</th>
-            <th>TH</th>
-            <th>F</th>
-            <th>SA</th>
-            <th>SU</th>
-          </tr>
-        </thead>
-        <tbody id="trainingTableBody">
-          <!-- Default training plan row -->
-          <tr>
-            <td>T1</td>
-            <td>Off</td>
-            <td>10-15 min w-up<br>30 sec sprint (70-80%)<br>to 60 sec walk<br>(4-12 times)</td>
-            <td>10-15 min c-d<br>X-train or 20-25 min EZ</td>
-            <td>10-15 min w-up<br>30-40 min Tempo run<br>(80–85% effort)</td>
-            <td>-10-15 min c-d<br>X-train or 20-25 min EZ</td>
-            <td>Off</td>
-            <td>45-55 min Long Run</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <h2>Your Training Plan</h2>
+    <!-- This content will be replaced with the user's personalized training plan -->
+    <div id="displayTraining"></div>
+    <!-- Optionally, you can still include a default info box -->
     <div class="info-box">
       <h3>Notes</h3>
       <p><strong>X-train</strong> (cross train) means to do something other than running but still targets the legs (e.g., biking, swimming, etc.).</p>
@@ -90,14 +57,9 @@
 
   <!-- Tutorials Tab -->
   <div id="tutorials" class="tab-content">
-    <h2>Tutorials</h2>
-    <ul id="tutorialList">
-      <li><a href="https://www.youtube.com/watch?v=k5vqiyry2z8" target="_blank">Tempo Run</a></li>
-      <li><a href="https://www.youtube.com/watch?v=L_vZjikr5Ew" target="_blank">Breathing Easier</a></li>
-      <li><a href="https://www.youtube.com/watch?v=Z3crT2UBeJE" target="_blank">Fartlek Run</a></li>
-      <li><a href="https://www.youtube.com/watch?v=5B1LxT_6GW0" target="_blank">Long Run</a></li>
-      <li><a href="https://www.youtube.com/shorts/s14SzolOHDY" target="_blank">Strides</a></li>
-    </ul>
+    <h2>Your Tutorials</h2>
+    <!-- This content will be replaced with the user's personalized tutorials -->
+    <div id="displayTutorials"></div>
   </div>
 
   <!-- Login Tab -->
@@ -110,10 +72,11 @@
     </div>
     <div id="userContent" style="display:none;">
       <h3>Welcome, <span id="loggedInUser"></span>!</h3>
+      <!-- The user view now shows their personalized content -->
       <h4>Your Training Plan</h4>
-      <p id="userTraining"></p>
+      <div id="displayTrainingUser"></div>
       <h4>Your Tutorials</h4>
-      <p id="userTutorials"></p>
+      <div id="displayTutorialsUser"></div>
     </div>
   </div>
 
@@ -134,31 +97,26 @@
       <input type="text" id="editUsername" placeholder="Username" /><br>
       <input type="text" id="editPassword" placeholder="Password" /><br>
       <h4>Training Plan</h4>
-      <textarea id="editTraining" rows="6" cols="50"></textarea><br>
+      <!-- Container for Quill editor for Training Plan -->
+      <div id="editTrainingEditor" class="quill-editor"></div>
       <h4>Tutorials</h4>
-      <textarea id="editTutorials" rows="6" cols="50"></textarea><br>
+      <!-- Container for Quill editor for Tutorials -->
+      <div id="editTutorialsEditor" class="quill-editor"></div>
       <button id="saveEdit">Save Changes</button>
       <button id="cancelEdit">Cancel</button>
     </div>
   </div>
 
-  <!-- Log Output Area -->
-  <div id="log"></div>
-
+  <!-- Include Quill JS -->
+  <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
   <!-- Include a browser-friendly version of jsrsasign -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/10.5.23/jsrsasign-all-min.js"></script>
   <script>
-    // Simple logging function to output messages to the log div
-    function logMessage(message) {
-      const logDiv = document.getElementById("log");
-      const msgDiv = document.createElement("div");
-      msgDiv.textContent = message;
-      logDiv.appendChild(msgDiv);
-    }
-
     /********************
-     * Google Sheets API Setup
+     * Configuration & Setup
      ********************/
+    // Update this if your sheet's tab name is different (for example, "Sheet1")
+    const SHEET_NAME = "Users";
     const SERVICE_ACCOUNT_EMAIL = "service-account@fitness-coaching-api.iam.gserviceaccount.com";
     const PRIVATE_KEY = `-----BEGIN PRIVATE KEY-----
 MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCs4H5Hh6v2tsqo
@@ -191,19 +149,18 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
     const TOKEN_URL = "https://oauth2.googleapis.com/token";
     const SCOPES = "https://www.googleapis.com/auth/spreadsheets";
     const SPREADSHEET_ID = "1aHnKAI9lNw8-ewOjwKV9XAwt8u10qU2C_OTFSoJCwe8";
-    // Use a fixed range ending row for users data
-    const USERS_RANGE = "Users!A2:D1000";
+    // Define the range using the actual sheet name
+    const USERS_RANGE = `${SHEET_NAME}!A2:D1000`;
     // The sheetId for the "Users" tab – update if needed (gid from URL)
     const USERS_SHEET_ID = 0; 
 
-    // Global storage for loaded user data from the sheet
     let allUsers = [];
-    // Store the currently logged-in user (object from allUsers)
     let currentUser = null;
-    // For editing a user in admin panel
     let currentEditRow = null;
 
-    // Function to get an access token using the service account
+    // Global variables for the Quill editors
+    let quillTraining, quillTutorials;
+
     async function getAccessToken() {
       try {
         const header = { alg: "RS256", typ: "JWT" };
@@ -222,40 +179,30 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
         const formData = new URLSearchParams();
         formData.append("grant_type", "urn:ietf:params:oauth:grant-type:jwt-bearer");
         formData.append("assertion", sJWT);
-        logMessage("Requesting access token...");
         const response = await fetch(TOKEN_URL, {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: formData.toString()
         });
         const data = await response.json();
-        logMessage("Access token received.");
         return data.access_token;
       } catch (e) {
-        logMessage("Error in getAccessToken: " + e.message);
+        console.error("Error in getAccessToken: " + e.message);
         throw e;
       }
     }
 
-    /********************
-     * Sheet Data Functions
-     ********************/
-    // Load all users from the sheet and store in allUsers[]
     async function loadUsers() {
       try {
         const token = await getAccessToken();
-        // Use the range directly without encoding
         const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${USERS_RANGE}`;
-        logMessage("Fetching users data from: " + url);
         const response = await fetch(url, { headers: { "Authorization": `Bearer ${token}` } });
-        logMessage("Response status: " + response.status);
         const data = await response.json();
-        logMessage("Users data received: " + JSON.stringify(data));
         allUsers = [];
         if (data.values) {
           data.values.forEach((row, index) => {
             allUsers.push({
-              row: index + 2, // since data starts on row 2
+              row: index + 2,
               username: row[0],
               password: row[1],
               training: row[2] || "",
@@ -264,61 +211,52 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
           });
         }
       } catch (e) {
-        logMessage("Error in loadUsers: " + e.message);
+        console.error("Error in loadUsers: " + e.message);
       }
     }
 
-    // Update a user in the sheet at a given row
     async function updateUser(row, userObj) {
       try {
         const token = await getAccessToken();
-        const range = `Users!A${row}:D${row}`;
+        const range = `${SHEET_NAME}!A${row}:D${row}`;
         const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?valueInputOption=USER_ENTERED`;
         const body = JSON.stringify({
           values: [[userObj.username, userObj.password, userObj.training, userObj.tutorials]]
         });
-        logMessage("Updating user at row " + row);
         const response = await fetch(url, {
           method: "PUT",
           headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
           body: body
         });
-        const result = await response.json();
-        logMessage("Update result: " + JSON.stringify(result));
-        return result;
+        return await response.json();
       } catch (e) {
-        logMessage("Error in updateUser: " + e.message);
+        console.error("Error in updateUser: " + e.message);
       }
     }
 
-    // Append a new user to the sheet
     async function appendUser(userObj) {
       try {
         const token = await getAccessToken();
-        const range = "Users!A:D";
+        const range = `${SHEET_NAME}!A:D`;
         const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
         const body = JSON.stringify({
           values: [[userObj.username, userObj.password, userObj.training, userObj.tutorials]]
         });
-        logMessage("Appending new user: " + userObj.username);
         const response = await fetch(url, {
           method: "POST",
           headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
           body: body
         });
-        const result = await response.json();
-        logMessage("Append result: " + JSON.stringify(result));
-        return result;
+        return await response.json();
       } catch (e) {
-        logMessage("Error in appendUser: " + e.message);
+        console.error("Error in appendUser: " + e.message);
       }
     }
 
-    // Delete a user (row) using batchUpdate
     async function deleteUserRow(row) {
       try {
         const token = await getAccessToken();
-        const rowIndex = row - 1; // Convert sheet row number to 0-indexed
+        const rowIndex = row - 1;
         const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}:batchUpdate`;
         const body = JSON.stringify({
           requests: [
@@ -334,24 +272,18 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
             }
           ]
         });
-        logMessage("Deleting user at row " + row);
         const response = await fetch(url, {
           method: "POST",
           headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
           body: body
         });
-        const result = await response.json();
-        logMessage("Delete result: " + JSON.stringify(result));
-        return result;
+        return await response.json();
       } catch (e) {
-        logMessage("Error in deleteUserRow: " + e.message);
+        console.error("Error in deleteUserRow: " + e.message);
       }
     }
 
-    /********************
-     * UI and Login Functions
-     ********************/
-    // Tab switching logic
+    // UI and Login Functions
     document.querySelectorAll('.tab-link').forEach(link => {
       link.addEventListener('click', () => {
         const tabId = link.getAttribute('data-tab');
@@ -360,7 +292,6 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       });
     });
 
-    // Login functionality: load users from sheet then verify credentials
     document.getElementById('loginBtn').addEventListener('click', async () => {
       await loadUsers();
       const username = document.getElementById('username').value;
@@ -372,8 +303,9 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
         document.getElementById('loginForm').style.display = 'none';
         document.getElementById('userContent').style.display = 'block';
         document.getElementById('loggedInUser').textContent = username;
-        document.getElementById('userTraining').textContent = user.training || "No training plan set.";
-        document.getElementById('userTutorials').textContent = user.tutorials || "No tutorials set.";
+        // Use innerHTML so that any HTML formatting is rendered
+        document.getElementById('displayTrainingUser').innerHTML = user.training || "No training plan set.";
+        document.getElementById('displayTutorialsUser').innerHTML = user.tutorials || "No tutorials set.";
         document.getElementById('navTraining').style.display = 'inline';
         document.getElementById('navTutorials').style.display = 'inline';
         document.getElementById('navLogin').style.display = 'none';
@@ -385,11 +317,9 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
         document.getElementById('training').classList.add('active');
       } else {
         alert('Invalid username or password.');
-        logMessage("Login failed for username: " + username);
       }
     });
 
-    // Logout functionality
     document.getElementById('logoutLink').addEventListener('click', () => {
       currentUser = null;
       document.getElementById('navTraining').style.display = 'none';
@@ -401,13 +331,9 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       document.getElementById('userContent').style.display = 'none';
       document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
       document.getElementById('login').classList.add('active');
-      logMessage("User logged out.");
     });
 
-    /********************
-     * Admin Panel Functions
-     ********************/
-    // Load users into admin panel list
+    // Admin Panel Functions
     document.getElementById('loadUsers').addEventListener('click', async () => {
       await loadUsers();
       let output = '<ul>';
@@ -418,10 +344,8 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       });
       output += '</ul>';
       document.getElementById('userList').innerHTML = output;
-      logMessage("Admin panel loaded users.");
     });
 
-    // Add a new user via admin panel
     document.getElementById('addUser').addEventListener('click', async () => {
       const newUsername = document.getElementById('newUsername').value;
       const newPassword = document.getElementById('newPassword').value;
@@ -434,11 +358,9 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
         document.getElementById('loadUsers').click();
       } else {
         alert('Please enter both username and password.');
-        logMessage("Failed to add user; missing username or password.");
       }
     });
 
-    // Delete a user via admin panel
     async function deleteUser(row) {
       if (confirm("Are you sure you want to delete this user?")) {
         await deleteUserRow(row);
@@ -447,7 +369,6 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       }
     }
 
-    // Edit a user: load their data into the edit form
     function editUser(row) {
       const user = allUsers.find(u => u.row === row);
       if (user) {
@@ -456,18 +377,30 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
         document.getElementById('editUsernameDisplay').textContent = user.username;
         document.getElementById('editUsername').value = user.username;
         document.getElementById('editPassword').value = user.password;
-        document.getElementById('editTraining').value = user.training;
-        document.getElementById('editTutorials').value = user.tutorials;
-        logMessage("Editing user: " + user.username);
+        // Initialize Quill editors for training and tutorials:
+        // Destroy previous instances if they exist.
+        if (window.quillTraining) {
+          window.quillTraining.root.innerHTML = ""; // clear content
+        } else {
+          window.quillTraining = new Quill('#editTrainingEditor', { theme: 'snow' });
+        }
+        if (window.quillTutorials) {
+          window.quillTutorials.root.innerHTML = "";
+        } else {
+          window.quillTutorials = new Quill('#editTutorialsEditor', { theme: 'snow' });
+        }
+        // Load user's existing HTML content (if any) into the editors.
+        window.quillTraining.root.innerHTML = user.training;
+        window.quillTutorials.root.innerHTML = user.tutorials;
       }
     }
 
-    // Save edited user data via admin panel
     document.getElementById('saveEdit').addEventListener('click', async () => {
       const newUsername = document.getElementById('editUsername').value;
       const newPassword = document.getElementById('editPassword').value;
-      const newTraining = document.getElementById('editTraining').value;
-      const newTutorials = document.getElementById('editTutorials').value;
+      // Get HTML content from Quill editors
+      const newTraining = window.quillTraining.root.innerHTML;
+      const newTutorials = window.quillTutorials.root.innerHTML;
       if(newUsername && newPassword){
         const updatedUser = {
           username: newUsername,
@@ -481,13 +414,11 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
         document.getElementById('loadUsers').click();
       } else {
         alert("Please fill in all fields.");
-        logMessage("Failed to save edit; missing fields.");
       }
     });
 
     document.getElementById('cancelEdit').addEventListener('click', () => {
       document.getElementById('editUser').style.display = 'none';
-      logMessage("Edit canceled.");
     });
   </script>
 </body>
