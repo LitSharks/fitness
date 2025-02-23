@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Fitness Coaching Program</title>
-  <!-- CKEditor 5 Classic for admin editing -->
+  <!-- CKEditor 5 Classic Build for admin editing -->
   <script src="https://cdn.ckeditor.com/ckeditor5/35.0.1/classic/ckeditor.js"></script>
   <style>
     /* Global Styles for a modern, minimalistic look */
@@ -43,7 +43,7 @@
       align-items: center;
     }
     header img.logo {
-      height: 80px;
+      height: 80px; /* enlarged logo */
       margin-right: 1em;
     }
     header button.settings-btn {
@@ -53,6 +53,7 @@
       font-size: 24px;
       cursor: pointer;
     }
+    /* Settings popover */
     .settings-popover {
       position: absolute;
       top: 60px;
@@ -75,6 +76,7 @@
     body.dark-mode .settings-popover label {
       color: #ddd;
     }
+    /* Toggle Switch (iOS style) */
     .toggle-switch {
       position: relative;
       display: inline-block;
@@ -111,6 +113,7 @@
     input:checked + .slider:before {
       transform: translateX(26px);
     }
+    /* Tab Content Styling */
     .tab-content {
       display: none;
       padding: 1.5em;
@@ -175,6 +178,7 @@
       padding: 8px;
       text-align: center;
     }
+    /* Notification Popup */
     .notification {
       position: fixed;
       top: 20px;
@@ -191,6 +195,7 @@
     .notification.show {
       opacity: 1;
     }
+    /* Contact Tab Styling */
     #contact {
       padding: 1.5em;
       background: #fff;
@@ -216,6 +221,7 @@
     body.dark-mode img.invert {
       filter: invert(1);
     }
+    /* Editor container for admin editing */
     .editor-container {
       border: 1px solid #ccc;
       min-height: 200px;
@@ -226,11 +232,14 @@
 <body>
   <header>
     <nav>
+      <!-- Public Navigation -->
       <a data-tab="login" class="tab-link" id="navLogin">Login</a>
       <a data-tab="getStarted" class="tab-link" id="navGetStarted">Get Started</a>
       <a data-tab="contact" class="tab-link" id="navContact">Contact</a>
+      <!-- User Navigation (shown after login) -->
       <a data-tab="training" class="tab-link" id="navTraining" style="display:none;">Training</a>
       <a data-tab="tutorials" class="tab-link" id="navTutorials" style="display:none;">Tutorials</a>
+      <!-- Admin-only Navigation -->
       <a data-tab="admin" class="tab-link" id="navAdmin" style="display:none;">Admin Control</a>
       <a data-tab="questionnaire" class="tab-link" id="navQuestionnaire" style="display:none;">Questionnaire</a>
       <a data-tab="applications" class="tab-link" id="navApplications" style="display:none;">Applications</a>
@@ -261,7 +270,7 @@
     </div>
   </div>
 
-  <!-- Get Started Tab (Questionnaire for Visitors) -->
+  <!-- Get Started Tab (for questionnaire submissions by visitors) -->
   <div id="getStarted" class="tab-content">
     <h2>Get Started</h2>
     <div id="questionnaireForm"></div>
@@ -352,19 +361,12 @@
     /********************
      * CONFIGURATION & CONSTANTS
      ********************/
-    // IMPORTANT: Update these sheet IDs to match your spreadsheet!
-    // For example, if your "Questions" tab's sheetId is 123456789, then set:
-    const SHEET_NAME = "Users"; // For user data (Users tab)
-    const QUESTIONS_SHEET_ID = 1;      // Update to your actual Questions sheetId
-    const APPLICATIONS_SHEET_ID = 2;   // Update to your actual Applications sheetId
-    const ANALYTICS_SHEET_ID = 3;      // Update to your actual Analytics sheetId
-
-    // Ranges for each tab:
-    const USERS_RANGE = `${SHEET_NAME}!A2:D1000`;
-    const QUESTIONS_RANGE = "Questions!A2:A1000";
-    const APPLICATIONS_RANGE = "Applications!A2:E1000";
-    const ANALYTICS_RANGE = "Analytics!A2:D1000";
-
+    // Sheet names (update these if needed)
+    const SHEET_NAME = "Users"; // for user data
+    const QUESTIONS_SHEET_NAME = "Questions";
+    const APPLICATIONS_SHEET_NAME = "Applications";
+    const ANALYTICS_SHEET_NAME = "Analytics";
+    // Service account credentials
     const SERVICE_ACCOUNT_EMAIL = "service-account@fitness-coaching-api.iam.gserviceaccount.com";
     const PRIVATE_KEY = `-----BEGIN PRIVATE KEY-----
 MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCs4H5Hh6v2tsqo
@@ -397,16 +399,16 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
     const TOKEN_URL = "https://oauth2.googleapis.com/token";
     const SCOPES = "https://www.googleapis.com/auth/spreadsheets";
     const SPREADSHEET_ID = "1aHnKAI9lNw8-ewOjwKV9XAwt8u10qU2C_OTFSoJCwe8";
-    // Ranges for each sheet (update as necessary)
+    // Ranges for different sheets
     const USERS_RANGE = `${SHEET_NAME}!A2:D1000`;
     const QUESTIONS_RANGE = "Questions!A2:A1000";
     const APPLICATIONS_RANGE = "Applications!A2:E1000";
     const ANALYTICS_RANGE = "Analytics!A2:D1000";
-    // IMPORTANT: Update these sheet IDs to match your spreadsheet's actual sheet IDs.
+    // Sheet IDs (update these based on your spreadsheet)
     const USERS_SHEET_ID = 0;
-    const QUESTIONS_SHEET_ID = 1;      // e.g., update to actual Questions sheetId
-    const APPLICATIONS_SHEET_ID = 2;   // e.g., update to actual Applications sheetId
-    const ANALYTICS_SHEET_ID = 3;      // e.g., update to actual Analytics sheetId
+    const QUESTIONS_SHEET_ID = 1;
+    const APPLICATIONS_SHEET_ID = 2;
+    const ANALYTICS_SHEET_ID = 3;
 
     let allUsers = [];
     let currentUser = null;
@@ -501,7 +503,7 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       });
       return await response.json();
     }
-    // Questions Functions
+    // Questions functions
     async function loadQuestions() {
       const token = await getAccessToken();
       const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(QUESTIONS_RANGE)}`;
@@ -515,56 +517,60 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       }
       return questions;
     }
-    async function updateQuestion(row, text) {
+    async function deleteQuestion(row) {
+      const token = await getAccessToken();
+      const rowIndex = row - 1; // 0-indexed
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}:batchUpdate`;
+      const body = JSON.stringify({
+        requests: [{
+          deleteDimension: {
+            range: { sheetId: QUESTIONS_SHEET_ID, dimension: "ROWS", startIndex: rowIndex, endIndex: rowIndex + 1 }
+          }
+        }]
+      });
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+        body: body
+      });
+      return await response.json();
+    }
+    async function swapQuestions(row1, row2) {
+      const token = await getAccessToken();
+      // First, get the current questions
+      const questions = await loadQuestions();
+      const q1 = questions.find(q => q.row === row1);
+      const q2 = questions.find(q => q.row === row2);
+      if (!q1 || !q2) return;
+      // Swap their texts by updating both rows
+      await updateQuestion(row1, q2.text);
+      await updateQuestion(row2, q1.text);
+    }
+    async function updateQuestion(row, questionText) {
       const token = await getAccessToken();
       const range = `Questions!A${row}:A${row}`;
       const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?valueInputOption=USER_ENTERED`;
-      const body = JSON.stringify({ values: [[text]] });
-      await fetch(url, {
+      const body = JSON.stringify({ values: [[questionText]] });
+      const response = await fetch(url, {
         method: "PUT",
         headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
         body: body
       });
+      return await response.json();
     }
     async function appendQuestion(questionText) {
       const token = await getAccessToken();
       const range = "Questions!A:A";
       const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
       const body = JSON.stringify({ values: [[questionText]] });
-      await fetch(url, {
+      const response = await fetch(url, {
         method: "POST",
         headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
         body: body
       });
+      return await response.json();
     }
-    async function deleteQuestion(row) {
-      if (confirm("Delete this question?")) {
-        const token = await getAccessToken();
-        const rowIndex = row - 1;
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}:batchUpdate`;
-        const body = JSON.stringify({
-          requests: [{
-            deleteDimension: {
-              range: { sheetId: QUESTIONS_SHEET_ID, dimension: "ROWS", startIndex: rowIndex, endIndex: rowIndex + 1 }
-            }
-          }]
-        });
-        await fetch(url, {
-          method: "POST",
-          headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
-          body: body
-        });
-      }
-    }
-    async function swapQuestions(row1, row2) {
-      const questions = await loadQuestions();
-      const q1 = questions.find(q => q.row === row1);
-      const q2 = questions.find(q => q.row === row2);
-      if (!q1 || !q2) return;
-      await updateQuestion(row1, q2.text);
-      await updateQuestion(row2, q1.text);
-    }
-    // Applications Functions
+    // Applications functions
     async function loadApplications() {
       const token = await getAccessToken();
       const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(APPLICATIONS_RANGE)}`;
@@ -579,25 +585,24 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       return apps;
     }
     async function deleteApplication(row) {
-      if (confirm("Delete this application?")) {
-        const token = await getAccessToken();
-        const rowIndex = row - 1;
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}:batchUpdate`;
-        const body = JSON.stringify({
-          requests: [{
-            deleteDimension: {
-              range: { sheetId: APPLICATIONS_SHEET_ID, dimension: "ROWS", startIndex: rowIndex, endIndex: rowIndex + 1 }
-            }
-          }]
-        });
-        await fetch(url, {
-          method: "POST",
-          headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
-          body: body
-        });
-      }
+      const token = await getAccessToken();
+      const rowIndex = row - 1;
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}:batchUpdate`;
+      const body = JSON.stringify({
+        requests: [{
+          deleteDimension: {
+            range: { sheetId: APPLICATIONS_SHEET_ID, dimension: "ROWS", startIndex: rowIndex, endIndex: rowIndex + 1 }
+          }
+        }]
+      });
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+        body: body
+      });
+      return await response.json();
     }
-    // Analytics Functions
+    // Analytics functions
     async function loadAnalytics() {
       const token = await getAccessToken();
       const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(ANALYTICS_RANGE)}`;
@@ -615,15 +620,13 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       const token = await getAccessToken();
       const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${ANALYTICS_RANGE}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
       const body = JSON.stringify({ values: [[analyticsObj.timestamp, analyticsObj.username, analyticsObj.ip, analyticsObj.deviceId]] });
-      await fetch(url, {
+      const response = await fetch(url, {
         method: "POST",
         headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
         body: body
       });
+      return await response.json();
     }
-    /********************
-     * Utility Functions
-     ********************/
     async function getUserIP() {
       try {
         const response = await fetch("https://api.ipify.org?format=json");
@@ -641,6 +644,7 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       }
       return deviceId;
     }
+
     /********************
      * Notification Function
      ********************/
@@ -655,6 +659,7 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
         setTimeout(() => document.body.removeChild(notification), 500);
       }, 2000);
     }
+
     /********************
      * Settings & Dark Mode
      ********************/
@@ -675,6 +680,7 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
         document.body.classList.remove("dark-mode");
       }
     });
+
     /********************
      * Tab Switching
      ********************/
@@ -685,6 +691,7 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
         document.getElementById(tabId).classList.add('active');
       });
     });
+
     /********************
      * User Login & Display
      ********************/
@@ -711,10 +718,12 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
           document.getElementById('navApplications').style.display = 'inline';
           document.getElementById('navAnalytics').style.display = 'inline';
         }
+        // Record analytics event
         const ip = await getUserIP();
         const deviceId = getDeviceId();
         const now = new Date().toLocaleString();
         await appendAnalytics({ timestamp: now, username: username, ip: ip, deviceId: deviceId });
+        // Inject user content (rendered as HTML)
         document.getElementById('displayTraining').innerHTML = user.training || "<p>No training plan set.</p>";
         document.getElementById('displayTutorials').innerHTML = user.tutorials || "<p>No tutorials set.</p>";
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
@@ -738,11 +747,13 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
       document.getElementById('login').classList.add('active');
     });
+
     /********************
      * Get Started (Questionnaire for Visitors)
      ********************/
     async function buildQuestionnaireForm() {
       const token = await getAccessToken();
+      // Load questions from Questions sheet
       const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(QUESTIONS_RANGE)}`;
       const response = await fetch(url, { headers: { "Authorization": `Bearer ${token}` } });
       const data = await response.json();
@@ -785,6 +796,7 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       showNotification("Your application has been submitted.");
       form.reset();
     });
+
     /********************
      * Admin Panel Functions for Users
      ********************/
@@ -867,10 +879,11 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
     document.getElementById('cancelEdit').addEventListener('click', () => {
       document.getElementById('editUser').style.display = 'none';
     });
+
     /********************
-     * Admin Panel Functions for Questionnaire Editor
+     * Admin Panel Functions for Questionnaire
      ********************/
-    async function buildQuestionnaireEditor() {
+    async function loadQuestions() {
       const token = await getAccessToken();
       const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(QUESTIONS_RANGE)}`;
       const response = await fetch(url, { headers: { "Authorization": `Bearer ${token}` } });
@@ -881,6 +894,10 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
           questions.push({ row: index + 2, text: row[0] });
         });
       }
+      return questions;
+    }
+    async function buildQuestionnaireEditor() {
+      const questions = await loadQuestions();
       let output = "<ol>";
       questions.forEach((q, idx) => {
         output += `<li>${q.text} 
@@ -904,12 +921,27 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
     });
     async function deleteQuestion(row) {
       if (confirm("Delete this question?")) {
-        await deleteQuestion(row);
+        const token = await getAccessToken();
+        const rowIndex = row - 1;
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}:batchUpdate`;
+        const body = JSON.stringify({
+          requests: [{
+            deleteDimension: {
+              range: { sheetId: QUESTIONS_SHEET_ID, dimension: "ROWS", startIndex: rowIndex, endIndex: rowIndex + 1 }
+            }
+          }]
+        });
+        await fetch(url, {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+          body: body
+        });
         showNotification("Question deleted.");
         buildQuestionnaireEditor();
       }
     }
     async function moveQuestionUp(row) {
+      // Swap with previous row if possible
       if (row > 2) {
         await swapQuestions(row, row - 1);
         showNotification("Question moved up.");
@@ -917,13 +949,15 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       }
     }
     async function moveQuestionDown(row) {
+      // Swap with next row
       await swapQuestions(row, row + 1);
       showNotification("Question moved down.");
       buildQuestionnaireEditor();
     }
     async function swapQuestions(row1, row2) {
       const token = await getAccessToken();
-      // Load current questions
+      // Get current question texts
+      // For simplicity, load questions and find the ones for the two rows
       const questions = await loadQuestions();
       const q1 = questions.find(q => q.row === row1);
       const q2 = questions.find(q => q.row === row2);
@@ -953,9 +987,23 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
         body: body
       });
     }
+
     /********************
      * Admin Panel Functions for Applications
      ********************/
+    async function loadApplications() {
+      const token = await getAccessToken();
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(APPLICATIONS_RANGE)}`;
+      const response = await fetch(url, { headers: { "Authorization": `Bearer ${token}` } });
+      const data = await response.json();
+      let apps = [];
+      if (data.values) {
+        data.values.forEach((row, index) => {
+          apps.push({ row: index + 2, timestamp: row[0], ip: row[1], answers: row[2], username: row[3], deviceId: row[4] });
+        });
+      }
+      return apps;
+    }
     document.getElementById("loadApplications").addEventListener("click", async () => {
       const apps = await loadApplications();
       let output = "<ul>";
@@ -967,11 +1015,26 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
     });
     async function deleteApplication(row) {
       if (confirm("Delete this application?")) {
-        await deleteApplication(row);
+        const token = await getAccessToken();
+        const rowIndex = row - 1;
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}:batchUpdate`;
+        const body = JSON.stringify({
+          requests: [{
+            deleteDimension: {
+              range: { sheetId: APPLICATIONS_SHEET_ID, dimension: "ROWS", startIndex: rowIndex, endIndex: rowIndex + 1 }
+            }
+          }]
+        });
+        await fetch(url, {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+          body: body
+        });
         showNotification("Application deleted.");
         document.getElementById("loadApplications").click();
       }
     }
+
     /********************
      * Admin Panel Functions for Analytics
      ********************/
@@ -984,8 +1047,9 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       output += "</table>";
       document.getElementById("analyticsData").innerHTML = output;
     });
+
     /********************
-     * Utility Functions
+     * Get User IP & Device ID
      ********************/
     async function getUserIP() {
       try {
@@ -1004,6 +1068,7 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       }
       return deviceId;
     }
+
   </script>
 </body>
 </html>
