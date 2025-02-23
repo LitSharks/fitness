@@ -129,8 +129,8 @@
     </div>
   </div>
 
-  <!-- Include jsrsasign for JWT signing -->
-  <script src="https://cdn.jsdelivr.net/npm/jsrsasign"></script>
+  <!-- Include a browser-friendly version of jsrsasign -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/10.5.23/jsrsasign-all-min.js"></script>
   <script>
     /********************
      * Google Sheets API Setup
@@ -167,9 +167,9 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
     const TOKEN_URL = "https://oauth2.googleapis.com/token";
     const SCOPES = "https://www.googleapis.com/auth/spreadsheets";
     const SPREADSHEET_ID = "1aHnKAI9lNw8-ewOjwKV9XAwt8u10qU2C_OTFSoJCwe8";
-    // Range for users data (assumes headers are in row 1)
+    // Range for users data (assumes headers in row 1)
     const USERS_RANGE = "Users!A2:D";
-    // The sheetId for the "Users" tab – update this if needed (gid from the URL)
+    // The sheetId for the "Users" tab – update if needed (gid from URL)
     const USERS_SHEET_ID = 0; 
 
     // Global storage for loaded user data from the sheet
@@ -212,14 +212,15 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
     // Load all users from the sheet and store in allUsers[]
     async function loadUsers() {
       const token = await getAccessToken();
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${USERS_RANGE}`;
+      // URL-encode the range to handle special characters (like !)
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(USERS_RANGE)}`;
       const response = await fetch(url, { headers: { "Authorization": `Bearer ${token}` } });
       const data = await response.json();
       allUsers = [];
       if (data.values) {
         data.values.forEach((row, index) => {
           allUsers.push({
-            row: index + 2, // because first data row is row 2
+            row: index + 2, // since data starts on row 2
             username: row[0],
             password: row[1],
             training: row[2] || "",
