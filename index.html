@@ -6,23 +6,91 @@
   <!-- CKEditor 5 Classic Build -->
   <script src="https://cdn.ckeditor.com/ckeditor5/35.0.1/classic/ckeditor.js"></script>
   <style>
-    /* Basic styling */
-    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
-    header { background: #333; color: #fff; padding: 1em; }
-    header nav a { color: #fff; text-decoration: none; margin-right: 1em; font-weight: bold; cursor: pointer; }
-    .tab-content { display: none; padding: 1em; }
-    .tab-content.active { display: block; }
-    .login-form { max-width: 300px; margin: 1em auto; border: 1px solid #ccc; padding: 1em; border-radius: 5px; }
-    .login-form input { width: 100%; padding: 0.5em; margin-bottom: 1em; }
-    .admin-panel { padding: 1em; background: #efefef; margin-bottom: 1em; }
-    /* Editor container styling */
-    .editor-container { border: 1px solid #ccc; margin-bottom: 1em; }
+    /* Global styling for a minimalistic, modern look */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f7f7f7;
+      color: #333;
+    }
+    header {
+      background: #222;
+      color: #fff;
+      padding: 1em;
+    }
+    header nav a {
+      color: #fff;
+      text-decoration: none;
+      margin-right: 1em;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .tab-content {
+      display: none;
+      padding: 1.5em;
+      background: #fff;
+      margin: 1em auto;
+      max-width: 900px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-radius: 5px;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .login-form {
+      max-width: 300px;
+      margin: 1em auto;
+      padding: 1em;
+      border: 1px solid #ddd;
+      background: #fff;
+      border-radius: 5px;
+    }
+    .login-form input {
+      width: 100%;
+      padding: 0.5em;
+      margin-bottom: 1em;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+    }
+    .admin-panel {
+      padding: 1em;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      margin-bottom: 1em;
+    }
+    /* Table styling for user view (and any pasted tables) */
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-bottom: 1em;
+    }
+    table, th, td {
+      border: 1px solid #ddd;
+    }
+    th, td {
+      padding: 8px;
+      text-align: center;
+    }
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+    /* CKEditor container styling */
+    .editor-container {
+      border: 1px solid #ccc;
+      min-height: 200px;
+      border-radius: 3px;
+    }
   </style>
 </head>
 <body>
   <header>
     <nav>
-      <!-- Initially only the Login tab is visible -->
+      <!-- Only the Login tab is visible until a successful login -->
       <a data-tab="training" class="tab-link" id="navTraining" style="display:none;">Training</a>
       <a data-tab="tutorials" class="tab-link" id="navTutorials" style="display:none;">Tutorials</a>
       <a data-tab="login" class="tab-link" id="navLogin">Login</a>
@@ -31,17 +99,17 @@
     </nav>
   </header>
 
-  <!-- Training Tab -->
+  <!-- Training Tab (User View) -->
   <div id="training" class="tab-content">
     <h2>Your Training Plan</h2>
-    <!-- This div will receive the user’s personalized training plan HTML -->
+    <!-- This div will display the saved (HTML formatted) training plan -->
     <div id="displayTraining"></div>
   </div>
 
-  <!-- Tutorials Tab -->
+  <!-- Tutorials Tab (User View) -->
   <div id="tutorials" class="tab-content">
     <h2>Your Tutorials</h2>
-    <!-- This div will receive the user’s personalized tutorials HTML -->
+    <!-- This div will display the saved (HTML formatted) tutorials -->
     <div id="displayTutorials"></div>
   </div>
 
@@ -122,9 +190,9 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
     const TOKEN_URL = "https://oauth2.googleapis.com/token";
     const SCOPES = "https://www.googleapis.com/auth/spreadsheets";
     const SPREADSHEET_ID = "1aHnKAI9lNw8-ewOjwKV9XAwt8u10qU2C_OTFSoJCwe8";
-    // Define the range for user data (assumes headers are in row 1)
+    // Define the range for user data (headers in row 1)
     const USERS_RANGE = `${SHEET_NAME}!A2:D1000`;
-    // Sheet ID for the "Users" tab (set via the URL; adjust if needed)
+    // Sheet ID for the "Users" tab (adjust if needed)
     const USERS_SHEET_ID = 0;
 
     let allUsers = [];
@@ -172,7 +240,7 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       if (data.values) {
         data.values.forEach((row, index) => {
           allUsers.push({
-            row: index + 2, // because data starts at row 2
+            row: index + 2,
             username: row[0],
             password: row[1],
             training: row[2] || "",
@@ -250,7 +318,7 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       });
     });
 
-    // On login, load users and then find the matching one.
+    // Login
     document.getElementById('loginBtn').addEventListener('click', async () => {
       await loadUsers();
       const username = document.getElementById('username').value;
@@ -259,7 +327,6 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       if (user) {
         currentUser = user;
         alert('Login successful!');
-        // Reveal the user tabs and hide the login tab
         document.getElementById('navTraining').style.display = 'inline';
         document.getElementById('navTutorials').style.display = 'inline';
         document.getElementById('navLogin').style.display = 'none';
@@ -267,10 +334,9 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
         if (username === 'cardio') {
           document.getElementById('navAdmin').style.display = 'inline';
         }
-        // Set user-specific content into the Training and Tutorials tabs
+        // Display user-specific content (render HTML)
         document.getElementById('displayTraining').innerHTML = user.training || "<p>No training plan set.</p>";
         document.getElementById('displayTutorials').innerHTML = user.tutorials || "<p>No tutorials set.</p>";
-        // Switch to Training tab by default
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
         document.getElementById('training').classList.add('active');
       } else {
@@ -278,6 +344,7 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       }
     });
 
+    // Logout
     document.getElementById('logoutLink').addEventListener('click', () => {
       currentUser = null;
       document.getElementById('navTraining').style.display = 'none';
@@ -285,7 +352,6 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       document.getElementById('navAdmin').style.display = 'none';
       document.getElementById('navLogin').style.display = 'inline';
       document.getElementById('logoutLink').style.display = 'none';
-      // Clear any user content if desired
       document.getElementById('displayTraining').innerHTML = "";
       document.getElementById('displayTutorials').innerHTML = "";
       document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
@@ -343,19 +409,24 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
         document.getElementById('editUsernameDisplay').textContent = user.username;
         document.getElementById('editUsername').value = user.username;
         document.getElementById('editPassword').value = user.password;
-        // Initialize CKEditor instances if not already
+        // Initialize CKEditor for Training Plan if not already initialized
         if (!editorTraining) {
-          ClassicEditor
-            .create(document.querySelector('#editTrainingEditor'))
-            .then(editor => { editorTraining = editor; editor.setData(user.training); })
+          ClassicEditor.create(document.querySelector('#editTrainingEditor'))
+            .then(editor => {
+              editorTraining = editor;
+              editorTraining.setData(user.training);
+            })
             .catch(error => { console.error(error); });
         } else {
           editorTraining.setData(user.training);
         }
+        // Initialize CKEditor for Tutorials if not already initialized
         if (!editorTutorials) {
-          ClassicEditor
-            .create(document.querySelector('#editTutorialsEditor'))
-            .then(editor => { editorTutorials = editor; editor.setData(user.tutorials); })
+          ClassicEditor.create(document.querySelector('#editTutorialsEditor'))
+            .then(editor => {
+              editorTutorials = editor;
+              editorTutorials.setData(user.tutorials);
+            })
             .catch(error => { console.error(error); });
         } else {
           editorTutorials.setData(user.tutorials);
