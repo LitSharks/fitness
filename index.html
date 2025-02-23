@@ -1,20 +1,175 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Google Sheets Client-Side Example</title>
+  <title>Fitness Coaching Program</title>
+  <style>
+    /* Basic styling for the website */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #333;
+      color: #fff;
+      padding: 1em;
+    }
+    header nav a {
+      color: #fff;
+      text-decoration: none;
+      margin-right: 1em;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .tab-content {
+      display: none;
+      padding: 1em;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .info-box {
+      position: fixed;
+      right: 0;
+      top: 60px;
+      background: #f9f9f9;
+      border-left: 2px solid #ccc;
+      padding: 1em;
+      width: 300px;
+      max-height: 80%;
+      overflow-y: auto;
+    }
+    .table-container {
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1em;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 0.5em;
+      text-align: center;
+    }
+    /* Login form styles */
+    .login-form {
+      max-width: 300px;
+      margin: 1em auto;
+      border: 1px solid #ccc;
+      padding: 1em;
+      border-radius: 5px;
+    }
+    .login-form input {
+      width: 100%;
+      padding: 0.5em;
+      margin-bottom: 1em;
+    }
+    .admin-panel {
+      padding: 1em;
+      background: #efefef;
+    }
+  </style>
 </head>
 <body>
-  <h1>Google Sheets Client-Side Example</h1>
-  <button id="read-data">Read Data</button>
-  <button id="write-data">Write Data</button>
-  <pre id="output"></pre>
+  <header>
+    <nav>
+      <a data-tab="training" class="tab-link">Training Plan</a>
+      <a data-tab="tutorials" class="tab-link">Tutorials</a>
+      <a data-tab="login" class="tab-link">Login</a>
+      <a data-tab="admin" class="tab-link" id="adminTab" style="display:none;">Admin Panel</a>
+    </nav>
+  </header>
 
-  <!-- Include jsrsasign for JWT signing -->
+  <!-- Training Plan Tab -->
+  <div id="training" class="tab-content active">
+    <h2>Stamina Training Plan - 5 Weeks</h2>
+    <div class="table-container">
+      <!-- Example training plan table -->
+      <table>
+        <thead>
+          <tr>
+            <th>Week</th>
+            <th>M</th>
+            <th>TU</th>
+            <th>W</th>
+            <th>TH</th>
+            <th>F</th>
+            <th>SA</th>
+            <th>SU</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>T1</td>
+            <td>Off</td>
+            <td>10-15 min w-up<br>30 sec sprint (70-80%)<br>to 60 sec walk<br>(4-12 times)</td>
+            <td>10-15 min c-d<br>X-train or 20-25 min EZ</td>
+            <td>10-15 min w-up<br>30-40 min Tempo run<br>(80–85% effort)</td>
+            <td>-10-15 min c-d<br>X-train or 20-25 min EZ</td>
+            <td>Off</td>
+            <td>45-55 min Long Run</td>
+          </tr>
+          <!-- Additional rows for Weeks 2-5 can be added here -->
+        </tbody>
+      </table>
+    </div>
+    <!-- Info box for training notes -->
+    <div class="info-box">
+      <h3>Notes</h3>
+      <p><strong>X-train</strong> (cross train) means to do something other than running but still targets the legs (e.g., biking, swimming, etc.).</p>
+      <p>On Hard days train Hard and on EZ days train Easy.</p>
+      <p>Eat well &amp; Sleep well (7-9 hours).</p>
+      <p>Ask if you want alternative workouts (e.g., Strength-endurance: calisthenics + weights).</p>
+    </div>
+  </div>
+
+  <!-- Tutorials Tab -->
+  <div id="tutorials" class="tab-content">
+    <h2>Tutorials</h2>
+    <ul>
+      <li><a href="https://www.youtube.com/watch?v=k5vqiyry2z8" target="_blank">Tempo Run</a></li>
+      <li><a href="https://www.youtube.com/watch?v=L_vZjikr5Ew" target="_blank">Breathing Easier</a></li>
+      <li><a href="https://www.youtube.com/watch?v=Z3crT2UBeJE" target="_blank">Fartlek Run</a></li>
+      <li><a href="https://www.youtube.com/watch?v=5B1LxT_6GW0" target="_blank">Long Run</a></li>
+      <li><a href="https://www.youtube.com/shorts/s14SzolOHDY" target="_blank">Strides</a></li>
+    </ul>
+  </div>
+
+  <!-- User Login & Personalized Plan Tab -->
+  <div id="login" class="tab-content">
+    <h2>User Login</h2>
+    <div class="login-form">
+      <input type="text" id="username" placeholder="Username" />
+      <input type="password" id="password" placeholder="Password" />
+      <button id="loginBtn">Login</button>
+    </div>
+    <div id="userPlan" style="display:none;">
+      <h3>Your Personalized Fitness Plan</h3>
+      <!-- You can later load this dynamically using the Sheets API -->
+      <p>This is your personalized plan. (For now, static content or fetched via API)</p>
+    </div>
+  </div>
+
+  <!-- Admin Control Panel Tab -->
+  <div id="admin" class="tab-content">
+    <h2>Admin Control Panel</h2>
+    <div class="admin-panel">
+      <button id="loadUsers">Load Users</button>
+      <div id="userList"></div>
+      <h3>Add/Edit User</h3>
+      <input type="text" id="adminUsername" placeholder="Username" />
+      <input type="text" id="adminPassword" placeholder="Password" /> <!-- Note: In production, passwords must be securely hashed! -->
+      <button id="saveUser">Save User</button>
+    </div>
+  </div>
+
+  <!-- API Functionality (Google Sheets API example) -->
+  <!-- Include jsrsasign for JWT signing (for client-side Sheets API calls) -->
   <script src="https://cdn.jsdelivr.net/npm/jsrsasign"></script>
-
   <script>
-    // Service account details
+    // Service account details (client-side version, not secure for production)
     const SERVICE_ACCOUNT_EMAIL = "service-account@fitness-coaching-api.iam.gserviceaccount.com";
     const PRIVATE_KEY = `-----BEGIN PRIVATE KEY-----
 MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCs4H5Hh6v2tsqo
@@ -45,10 +200,11 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
 7/TjHERfIzWM9qI+/ha6ZlIy
 -----END PRIVATE KEY-----
 `;
-
     const TOKEN_URL = "https://oauth2.googleapis.com/token";
     const SCOPES = "https://www.googleapis.com/auth/spreadsheets";
+    // Your spreadsheet ID (set earlier)
     const SPREADSHEET_ID = "1aHnKAI9lNw8-ewOjwKV9XAwt8u10qU2C_OTFSoJCwe8";
+    // For demonstration, using the same range as in the training plan table
     const SHEET_RANGE = "Sheet1!A1:D5";
 
     async function getAccessToken() {
@@ -81,6 +237,7 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       return data.access_token;
     }
 
+    // Example functions to read and write data to the Google Sheet.
     async function readData() {
       try {
         const token = await getAccessToken();
@@ -92,9 +249,9 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
         });
 
         const data = await response.json();
-        document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+        console.log("Sheet data:", data);
       } catch (error) {
-        document.getElementById("output").textContent = error.toString();
+        console.error("Error reading data:", error);
       }
     }
 
@@ -119,14 +276,67 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
         });
 
         const result = await response.json();
-        document.getElementById("output").textContent = JSON.stringify(result, null, 2);
+        console.log("Write result:", result);
       } catch (error) {
-        document.getElementById("output").textContent = error.toString();
+        console.error("Error writing data:", error);
       }
     }
 
-    document.getElementById("read-data").addEventListener("click", readData);
-    document.getElementById("write-data").addEventListener("click", writeData);
+    // Tab switching logic
+    document.querySelectorAll('.tab-link').forEach(link => {
+      link.addEventListener('click', () => {
+        const tabId = link.getAttribute('data-tab');
+        document.querySelectorAll('.tab-content').forEach(tab => {
+          tab.classList.remove('active');
+        });
+        document.getElementById(tabId).classList.add('active');
+      });
+    });
+
+    // Simple login functionality (demo only)
+    const users = { "user1": "password1", "admin": "adminpass" };
+
+    document.getElementById('loginBtn').addEventListener('click', () => {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      if (users[username] && users[username] === password) {
+        alert('Login successful!');
+        // Hide login form and show personalized plan
+        document.querySelector('#login .login-form').style.display = 'none';
+        document.getElementById('userPlan').style.display = 'block';
+        // If user is admin, reveal Admin Panel tab
+        if (username === 'admin') {
+          document.getElementById('adminTab').style.display = 'inline';
+        }
+      } else {
+        alert('Invalid username or password.');
+      }
+    });
+
+    // Basic admin functionality for demo
+    document.getElementById('loadUsers').addEventListener('click', () => {
+      let output = '<ul>';
+      for (const user in users) {
+        output += `<li>${user} - ${users[user]}</li>`;
+      }
+      output += '</ul>';
+      document.getElementById('userList').innerHTML = output;
+    });
+
+    document.getElementById('saveUser').addEventListener('click', () => {
+      const username = document.getElementById('adminUsername').value;
+      const password = document.getElementById('adminPassword').value;
+      if (username && password) {
+        users[username] = password;
+        alert('User saved.');
+      } else {
+        alert('Please enter both username and password.');
+      }
+    });
+
+    // For testing: Uncomment to call API functions
+    // readData();
+    // writeData();
   </script>
 </body>
 </html>
