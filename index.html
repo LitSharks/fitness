@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <title>Fitness Coaching Program</title>
-  <!-- CKEditor 5 Classic Build for admin editing -->
+  <!-- CKEditor 5 Classic Build for Admin Editing -->
   <script src="https://cdn.ckeditor.com/ckeditor5/35.0.1/classic/ckeditor.js"></script>
   <style>
-    /* Global styling for a minimalistic, modern feel */
+    /* Global Styles */
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
@@ -27,6 +27,14 @@
       color: #fff;
       padding: 1em;
     }
+    header .header-right {
+      display: flex;
+      align-items: center;
+    }
+    header img.logo {
+      height: 60px; /* enlarged logo */
+      margin-right: 1em;
+    }
     header nav {
       display: flex;
       align-items: center;
@@ -38,22 +46,7 @@
       font-weight: 600;
       cursor: pointer;
     }
-    header .header-right {
-      display: flex;
-      align-items: center;
-    }
-    header img.logo {
-      height: 40px;
-      margin-right: 1em;
-    }
-    header button.settings-btn {
-      background: none;
-      border: none;
-      color: #fff;
-      font-size: 20px;
-      cursor: pointer;
-    }
-    /* Settings popover */
+    /* Settings Popover */
     .settings-popover {
       position: absolute;
       top: 60px;
@@ -66,12 +59,12 @@
       display: none;
       z-index: 100;
     }
-    .settings-popover.dark-mode {
+    .dark-mode .settings-popover {
       background: #333;
-      color: #ddd;
       border-color: #444;
+      color: #ddd;
     }
-    /* Dark/light toggle switch (iOS style) */
+    /* Toggle Switch (iOS style) */
     .toggle-switch {
       position: relative;
       display: inline-block;
@@ -108,7 +101,7 @@
     input:checked + .slider:before {
       transform: translateX(26px);
     }
-    /* Tab content styling */
+    /* Tab Content */
     .tab-content {
       display: none;
       padding: 1.5em;
@@ -117,9 +110,14 @@
       max-width: 900px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       border-radius: 5px;
+      transition: background 0.3s, color 0.3s;
     }
     .tab-content.active {
       display: block;
+    }
+    body.dark-mode .tab-content {
+      background: #333;
+      color: #ddd;
     }
     .login-form {
       max-width: 300px;
@@ -128,6 +126,10 @@
       border: 1px solid #ddd;
       background: #fff;
       border-radius: 5px;
+    }
+    body.dark-mode .login-form {
+      background: #444;
+      border-color: #666;
     }
     .login-form input {
       width: 100%;
@@ -143,7 +145,11 @@
       border-radius: 5px;
       margin-bottom: 1em;
     }
-    /* Ensure tables in user content show borders */
+    body.dark-mode .admin-panel {
+      background: #444;
+      border-color: #666;
+    }
+    /* Table Styling for User Content */
     #displayTraining table,
     #displayTraining th,
     #displayTraining td,
@@ -160,7 +166,7 @@
       padding: 8px;
       text-align: center;
     }
-    /* Notification popup styling */
+    /* Notification Popup */
     .notification {
       position: fixed;
       top: 20px;
@@ -177,7 +183,7 @@
     .notification.show {
       opacity: 1;
     }
-    /* Contact tab styling */
+    /* Contact Tab Styling */
     #contact {
       padding: 1.5em;
       background: #fff;
@@ -186,27 +192,39 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       border-radius: 5px;
     }
+    body.dark-mode #contact {
+      background: #333;
+      color: #ddd;
+    }
+    #contact p {
+      display: flex;
+      align-items: center;
+      margin: 0.5em 0;
+    }
+    #contact p img.icon {
+      height: 20px;
+      width: 20px;
+      margin-right: 0.5em;
+    }
+    /* In dark mode, invert icons with the 'invert' class */
+    body.dark-mode img.invert {
+      filter: invert(1);
+    }
   </style>
 </head>
 <body>
   <header>
     <nav>
-      <!-- Navigation (Login and Contact are visible by default) -->
       <a data-tab="login" class="tab-link" id="navLogin">Login</a>
       <a data-tab="contact" class="tab-link" id="navContact">Contact</a>
-      <!-- These tabs are hidden until login -->
       <a data-tab="training" class="tab-link" id="navTraining" style="display:none;">Training</a>
       <a data-tab="tutorials" class="tab-link" id="navTutorials" style="display:none;">Tutorials</a>
-      <!-- Admin Control (hidden until admin logs in) -->
       <a data-tab="admin" class="tab-link" id="navAdmin" style="display:none;">Admin Control</a>
       <a id="logoutLink" style="display:none; cursor:pointer; color:#fff; margin-left:1em;">Logout</a>
     </nav>
     <div class="header-right">
-      <!-- Logo on top right -->
       <img src="logo.png" alt="Logo" class="logo">
-      <!-- Settings button -->
       <button class="settings-btn" id="settingsBtn">&#9881;</button>
-      <!-- Settings popover -->
       <div class="settings-popover" id="settingsPopover">
         <label for="modeSwitch">Dark Mode:</label>
         <label class="toggle-switch">
@@ -240,13 +258,21 @@
     <div id="displayTutorials"></div>
   </div>
 
-  <!-- Contact Tab (Public) -->
+  <!-- Contact Tab -->
   <div id="contact" class="tab-content">
     <h2>Contact</h2>
-    <p><strong>Fitness Coach:</strong></p>
-    <p>Email: temp</p>
-    <p>Phone: temp</p>
-    <p>Web: temp</p>
+    <p>
+      <img src="phone-icon.png" alt="Phone" class="icon invert">
+      <span>Phone: temp</span>
+    </p>
+    <p>
+      <img src="email-icon.png" alt="Email" class="icon invert">
+      <span>Email: temp</span>
+    </p>
+    <p>
+      <img src="web-icon.png" alt="Web" class="icon invert">
+      <span>Web: temp</span>
+    </p>
   </div>
 
   <!-- Admin Control Tab -->
@@ -260,7 +286,6 @@
       <input type="text" id="newPassword" placeholder="New Password" />
       <button id="addUser">Add User</button>
     </div>
-    <!-- User Editing Section (hidden by default) -->
     <div id="editUser" style="display:none;">
       <h3>Edit User: <span id="editUsernameDisplay"></span></h3>
       <input type="text" id="editUsername" placeholder="Username" /><br>
@@ -274,7 +299,7 @@
     </div>
   </div>
 
-  <!-- Notification Container (dynamically inserted) -->
+  <!-- Notification Popup Container (dynamically inserted) -->
   <div id="notificationContainer"></div>
 
   <!-- Include jsrsasign -->
@@ -283,7 +308,7 @@
     /********************
      * Configuration & Setup
      ********************/
-    // Update this if your sheet's tab name is different (e.g., "Sheet1")
+    // Update this if your sheet's tab name is different
     const SHEET_NAME = "Users";
     const SERVICE_ACCOUNT_EMAIL = "service-account@fitness-coaching-api.iam.gserviceaccount.com";
     const PRIVATE_KEY = `-----BEGIN PRIVATE KEY-----
@@ -437,30 +462,25 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       notification.className = "notification";
       notification.textContent = message;
       document.body.appendChild(notification);
-      setTimeout(() => {
-        notification.classList.add("show");
-      }, 100);
+      setTimeout(() => notification.classList.add("show"), 100);
       setTimeout(() => {
         notification.classList.remove("show");
-        setTimeout(() => {
-          document.body.removeChild(notification);
-        }, 500);
+        setTimeout(() => document.body.removeChild(notification), 500);
       }, 2000);
     }
 
     /********************
-     * Settings Popover & Dark Mode
+     * Settings & Dark Mode
      ********************/
     const settingsBtn = document.getElementById("settingsBtn");
     const settingsPopover = document.getElementById("settingsPopover");
     const modeSwitch = document.getElementById("modeSwitch");
 
-    // Toggle popover visibility
     settingsBtn.addEventListener("click", () => {
       settingsPopover.style.display = settingsPopover.style.display === "block" ? "none" : "block";
     });
 
-    // Set initial mode based on browser preference
+    // Set initial mode from system preference
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
       modeSwitch.checked = true;
       document.body.classList.add("dark-mode");
@@ -469,10 +489,8 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
     modeSwitch.addEventListener("change", () => {
       if (modeSwitch.checked) {
         document.body.classList.add("dark-mode");
-        settingsPopover.classList.add("dark-mode");
       } else {
         document.body.classList.remove("dark-mode");
-        settingsPopover.classList.remove("dark-mode");
       }
     });
 
@@ -498,7 +516,6 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       if (user) {
         currentUser = user;
         showNotification("Login successful!");
-        // Reveal user tabs and hide login
         document.getElementById('navTraining').style.display = 'inline';
         document.getElementById('navTutorials').style.display = 'inline';
         document.getElementById('navContact').style.display = 'inline';
@@ -507,7 +524,7 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
         if (username === 'cardio') {
           document.getElementById('navAdmin').style.display = 'inline';
         }
-        // Set user-specific content (rendered as HTML)
+        // Inject user content (as HTML) into Training and Tutorials tabs
         document.getElementById('displayTraining').innerHTML = user.training || "<p>No training plan set.</p>";
         document.getElementById('displayTutorials').innerHTML = user.tutorials || "<p>No tutorials set.</p>";
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
