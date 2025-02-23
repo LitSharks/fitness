@@ -32,7 +32,7 @@
       align-items: center;
     }
     header img.logo {
-      height: 60px; /* enlarged logo */
+      height: 80px; /* enlarged logo */
       margin-right: 1em;
     }
     header nav {
@@ -59,9 +59,14 @@
       display: none;
       z-index: 100;
     }
-    .dark-mode .settings-popover {
+    .settings-popover label {
+      color: #333;
+    }
+    body.dark-mode .settings-popover {
       background: #333;
       border-color: #444;
+    }
+    body.dark-mode .settings-popover label {
       color: #ddd;
     }
     /* Toggle Switch (iOS style) */
@@ -270,7 +275,7 @@
       <span>Email: temp</span>
     </p>
     <p>
-      <img src="web-icon.png" alt="Web" class="icon invert">
+      <img src="website-icon.png" alt="Website" class="icon invert">
       <span>Web: temp</span>
     </p>
   </div>
@@ -286,6 +291,7 @@
       <input type="text" id="newPassword" placeholder="New Password" />
       <button id="addUser">Add User</button>
     </div>
+    <!-- User Editing Section (hidden by default) -->
     <div id="editUser" style="display:none;">
       <h3>Edit User: <span id="editUsernameDisplay"></span></h3>
       <input type="text" id="editUsername" placeholder="Username" /><br>
@@ -308,8 +314,7 @@
     /********************
      * Configuration & Setup
      ********************/
-    // Update this if your sheet's tab name is different
-    const SHEET_NAME = "Users";
+    const SHEET_NAME = "Users"; // update if needed
     const SERVICE_ACCOUNT_EMAIL = "service-account@fitness-coaching-api.iam.gserviceaccount.com";
     const PRIVATE_KEY = `-----BEGIN PRIVATE KEY-----
 MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCs4H5Hh6v2tsqo
@@ -480,7 +485,7 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       settingsPopover.style.display = settingsPopover.style.display === "block" ? "none" : "block";
     });
 
-    // Set initial mode from system preference
+    // Set initial mode based on system preference
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
       modeSwitch.checked = true;
       document.body.classList.add("dark-mode");
@@ -515,7 +520,11 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       const user = allUsers.find(u => u.username === username && u.password === password);
       if (user) {
         currentUser = user;
-        showNotification("Login successful!");
+        if (username === "cardio") {
+          showNotification("Administrator login successful");
+        } else {
+          showNotification("Login successful!");
+        }
         document.getElementById('navTraining').style.display = 'inline';
         document.getElementById('navTutorials').style.display = 'inline';
         document.getElementById('navContact').style.display = 'inline';
@@ -524,7 +533,7 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
         if (username === 'cardio') {
           document.getElementById('navAdmin').style.display = 'inline';
         }
-        // Inject user content (as HTML) into Training and Tutorials tabs
+        // Inject user content (rendered as HTML) into the Training and Tutorials tabs
         document.getElementById('displayTraining').innerHTML = user.training || "<p>No training plan set.</p>";
         document.getElementById('displayTutorials').innerHTML = user.tutorials || "<p>No tutorials set.</p>";
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
