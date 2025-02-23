@@ -226,14 +226,11 @@
 <body>
   <header>
     <nav>
-      <!-- Public Navigation -->
       <a data-tab="login" class="tab-link" id="navLogin">Login</a>
       <a data-tab="getStarted" class="tab-link" id="navGetStarted">Get Started</a>
       <a data-tab="contact" class="tab-link" id="navContact">Contact</a>
-      <!-- User Navigation (after login) -->
       <a data-tab="training" class="tab-link" id="navTraining" style="display:none;">Training</a>
       <a data-tab="tutorials" class="tab-link" id="navTutorials" style="display:none;">Tutorials</a>
-      <!-- Admin-only Navigation -->
       <a data-tab="admin" class="tab-link" id="navAdmin" style="display:none;">Admin Control</a>
       <a data-tab="questionnaire" class="tab-link" id="navQuestionnaire" style="display:none;">Questionnaire</a>
       <a data-tab="applications" class="tab-link" id="navApplications" style="display:none;">Applications</a>
@@ -349,18 +346,20 @@
   <!-- Notification Popup Container -->
   <div id="notificationContainer"></div>
 
-  <!-- Consolidated Script -->
+  <!-- Include jsrsasign -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/10.5.23/jsrsasign-all-min.js"></script>
   <script>
     /********************
      * CONFIGURATION & CONSTANTS
      ********************/
-    // Sheet names and IDs – update these to match your spreadsheet metadata
-    const SHEET_NAME = "Users";  // For user data
-    const QUESTIONS_SHEET_ID = 543263833;      // For Questions tab
-    const APPLICATIONS_SHEET_ID = 215676021;   // For Applications tab
-    const ANALYTICS_SHEET_ID = 889176221;        // For Analytics tab
+    // IMPORTANT: Update these sheet IDs to match your spreadsheet!
+    // For example, if your "Questions" tab's sheetId is 123456789, then set:
+    const SHEET_NAME = "Users"; // For user data (Users tab)
+    const QUESTIONS_SHEET_ID = 1;      // Update to your actual Questions sheetId
+    const APPLICATIONS_SHEET_ID = 2;   // Update to your actual Applications sheetId
+    const ANALYTICS_SHEET_ID = 3;      // Update to your actual Analytics sheetId
 
-    // Ranges for each sheet
+    // Ranges for each tab:
     const USERS_RANGE = `${SHEET_NAME}!A2:D1000`;
     const QUESTIONS_RANGE = "Questions!A2:A1000";
     const APPLICATIONS_RANGE = "Applications!A2:E1000";
@@ -398,19 +397,16 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
     const TOKEN_URL = "https://oauth2.googleapis.com/token";
     const SCOPES = "https://www.googleapis.com/auth/spreadsheets";
     const SPREADSHEET_ID = "1aHnKAI9lNw8-ewOjwKV9XAwt8u10qU2C_OTFSoJCwe8";
-
-    /********************
-     * RANGES and Sheet IDs
-     ********************/
+    // Ranges for each sheet (update as necessary)
     const USERS_RANGE = `${SHEET_NAME}!A2:D1000`;
     const QUESTIONS_RANGE = "Questions!A2:A1000";
     const APPLICATIONS_RANGE = "Applications!A2:E1000";
     const ANALYTICS_RANGE = "Analytics!A2:D1000";
-    // IMPORTANT: Update these sheet IDs to match your spreadsheet metadata!
+    // IMPORTANT: Update these sheet IDs to match your spreadsheet's actual sheet IDs.
     const USERS_SHEET_ID = 0;
-    const QUESTIONS_SHEET_ID = 543263833;
-    const APPLICATIONS_SHEET_ID = 215676021;
-    const ANALYTICS_SHEET_ID = 889176221;
+    const QUESTIONS_SHEET_ID = 1;      // e.g., update to actual Questions sheetId
+    const APPLICATIONS_SHEET_ID = 2;   // e.g., update to actual Applications sheetId
+    const ANALYTICS_SHEET_ID = 3;      // e.g., update to actual Analytics sheetId
 
     let allUsers = [];
     let currentUser = null;
@@ -541,22 +537,24 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
         body: body
       });
     }
-    async function deleteQuestionRow(row) {
-      const token = await getAccessToken();
-      const rowIndex = row - 1;
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}:batchUpdate`;
-      const body = JSON.stringify({
-        requests: [{
-          deleteDimension: {
-            range: { sheetId: QUESTIONS_SHEET_ID, dimension: "ROWS", startIndex: rowIndex, endIndex: rowIndex + 1 }
-          }
-        }]
-      });
-      await fetch(url, {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
-        body: body
-      });
+    async function deleteQuestion(row) {
+      if (confirm("Delete this question?")) {
+        const token = await getAccessToken();
+        const rowIndex = row - 1;
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}:batchUpdate`;
+        const body = JSON.stringify({
+          requests: [{
+            deleteDimension: {
+              range: { sheetId: QUESTIONS_SHEET_ID, dimension: "ROWS", startIndex: rowIndex, endIndex: rowIndex + 1 }
+            }
+          }]
+        });
+        await fetch(url, {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+          body: body
+        });
+      }
     }
     async function swapQuestions(row1, row2) {
       const questions = await loadQuestions();
@@ -580,22 +578,24 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       }
       return apps;
     }
-    async function deleteApplicationRowInternal(row) {
-      const token = await getAccessToken();
-      const rowIndex = row - 1;
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}:batchUpdate`;
-      const body = JSON.stringify({
-        requests: [{
-          deleteDimension: {
-            range: { sheetId: APPLICATIONS_SHEET_ID, dimension: "ROWS", startIndex: rowIndex, endIndex: rowIndex + 1 }
-          }
-        }]
-      });
-      await fetch(url, {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
-        body: body
-      });
+    async function deleteApplication(row) {
+      if (confirm("Delete this application?")) {
+        const token = await getAccessToken();
+        const rowIndex = row - 1;
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}:batchUpdate`;
+        const body = JSON.stringify({
+          requests: [{
+            deleteDimension: {
+              range: { sheetId: APPLICATIONS_SHEET_ID, dimension: "ROWS", startIndex: rowIndex, endIndex: rowIndex + 1 }
+            }
+          }]
+        });
+        await fetch(url, {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+          body: body
+        });
+      }
     }
     // Analytics Functions
     async function loadAnalytics() {
@@ -884,7 +884,7 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       let output = "<ol>";
       questions.forEach((q, idx) => {
         output += `<li>${q.text} 
-          <button onclick="deleteQuestionRow(${q.row})">Delete</button> 
+          <button onclick="deleteQuestion(${q.row})">Delete</button> 
           <button onclick="moveQuestionUp(${q.row})">Up</button> 
           <button onclick="moveQuestionDown(${q.row})">Down</button></li>`;
       });
@@ -902,9 +902,9 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
         showNotification("Please enter a question.");
       }
     });
-    async function deleteQuestionRow(row) {
+    async function deleteQuestion(row) {
       if (confirm("Delete this question?")) {
-        await deleteQuestionRow(row);
+        await deleteQuestion(row);
         showNotification("Question deleted.");
         buildQuestionnaireEditor();
       }
@@ -923,281 +923,7 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
     }
     async function swapQuestions(row1, row2) {
       const token = await getAccessToken();
-      const questions = await loadQuestions();
-      const q1 = questions.find(q => q.row === row1);
-      const q2 = questions.find(q => q.row === row2);
-      if (!q1 || !q2) return;
-      await updateQuestion(row1, q2.text);
-      await updateQuestion(row2, q1.text);
-    }
-    /********************
-     * Admin Panel Functions for Applications
-     ********************/
-    document.getElementById("loadApplications").addEventListener("click", async () => {
-      const apps = await loadApplications();
-      let output = "<ul>";
-      apps.forEach(app => {
-        output += `<li><strong>${app.timestamp}</strong> - IP: ${app.ip} - Answers: ${app.answers} <button onclick="deleteApplicationRow(${app.row})">Delete</button></li>`;
-      });
-      output += "</ul>";
-      document.getElementById("applicationsList").innerHTML = output;
-    });
-    async function deleteApplicationRow(row) {
-      if (confirm("Delete this application?")) {
-        await deleteApplicationRowInternal(row);
-        showNotification("Application deleted.");
-        document.getElementById("loadApplications").click();
-      }
-    }
-    async function deleteApplicationRowInternal(row) {
-      const token = await getAccessToken();
-      const rowIndex = row - 1;
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}:batchUpdate`;
-      const body = JSON.stringify({
-        requests: [{
-          deleteDimension: {
-            range: { sheetId: APPLICATIONS_SHEET_ID, dimension: "ROWS", startIndex: rowIndex, endIndex: rowIndex + 1 }
-          }
-        }]
-      });
-      await fetch(url, {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
-        body: body
-      });
-    }
-    /********************
-     * Admin Panel Functions for Analytics
-     ********************/
-    document.getElementById("loadAnalytics").addEventListener("click", async () => {
-      const analytics = await loadAnalytics();
-      let output = "<table><tr><th>Timestamp</th><th>Username</th><th>IP</th><th>Device ID</th></tr>";
-      analytics.forEach(a => {
-        output += `<tr><td>${a.timestamp}</td><td>${a.username}</td><td>${a.ip}</td><td>${a.deviceId}</td></tr>`;
-      });
-      output += "</table>";
-      document.getElementById("analyticsData").innerHTML = output;
-    });
-    /********************
-     * Utility Functions
-     ********************/
-    async function getUserIP() {
-      try {
-        const response = await fetch("https://api.ipify.org?format=json");
-        const data = await response.json();
-        return data.ip;
-      } catch (e) {
-        return "Unknown";
-      }
-    }
-    function getDeviceId() {
-      let deviceId = localStorage.getItem("deviceId");
-      if (!deviceId) {
-        deviceId = 'device-' + Math.random().toString(36).substring(2, 15);
-        localStorage.setItem("deviceId", deviceId);
-      }
-      return deviceId;
-    }
-    /********************
-     * Notification Function
-     ********************/
-    function showNotification(message) {
-      const notification = document.createElement("div");
-      notification.className = "notification";
-      notification.textContent = message;
-      document.body.appendChild(notification);
-      setTimeout(() => notification.classList.add("show"), 100);
-      setTimeout(() => {
-        notification.classList.remove("show");
-        setTimeout(() => document.body.removeChild(notification), 500);
-      }, 2000);
-    }
-    /********************
-     * Settings & Dark Mode
-     ********************/
-    const settingsBtn = document.getElementById("settingsBtn");
-    const settingsPopover = document.getElementById("settingsPopover");
-    const modeSwitch = document.getElementById("modeSwitch");
-    settingsBtn.addEventListener("click", () => {
-      settingsPopover.style.display = settingsPopover.style.display === "block" ? "none" : "block";
-    });
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      modeSwitch.checked = true;
-      document.body.classList.add("dark-mode");
-    }
-    modeSwitch.addEventListener("change", () => {
-      if (modeSwitch.checked) {
-        document.body.classList.add("dark-mode");
-      } else {
-        document.body.classList.remove("dark-mode");
-      }
-    });
-    /********************
-     * Tab Switching
-     ********************/
-    document.querySelectorAll('.tab-link').forEach(link => {
-      link.addEventListener('click', () => {
-        const tabId = link.getAttribute('data-tab');
-        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-        document.getElementById(tabId).classList.add('active');
-      });
-    });
-    /********************
-     * User Login & Display
-     ********************/
-    document.getElementById('loginBtn').addEventListener('click', async () => {
-      await loadUsers();
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
-      const user = allUsers.find(u => u.username === username && u.password === password);
-      if (user) {
-        currentUser = user;
-        if (username === "cardio") {
-          showNotification("Administrator login successful");
-        } else {
-          showNotification("Login successful!");
-        }
-        document.getElementById('navTraining').style.display = 'inline';
-        document.getElementById('navTutorials').style.display = 'inline';
-        document.getElementById('navContact').style.display = 'inline';
-        document.getElementById('navLogin').style.display = 'none';
-        document.getElementById('logoutLink').style.display = 'inline';
-        if (username === 'cardio') {
-          document.getElementById('navAdmin').style.display = 'inline';
-          document.getElementById('navQuestionnaire').style.display = 'inline';
-          document.getElementById('navApplications').style.display = 'inline';
-          document.getElementById('navAnalytics').style.display = 'inline';
-        }
-        const ip = await getUserIP();
-        const deviceId = getDeviceId();
-        const now = new Date().toLocaleString();
-        await appendAnalytics({ timestamp: now, username: username, ip: ip, deviceId: deviceId });
-        document.getElementById('displayTraining').innerHTML = user.training || "<p>No training plan set.</p>";
-        document.getElementById('displayTutorials').innerHTML = user.tutorials || "<p>No tutorials set.</p>";
-        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-        document.getElementById('training').classList.add('active');
-      } else {
-        showNotification("Invalid username or password.");
-      }
-    });
-    document.getElementById('logoutLink').addEventListener('click', () => {
-      currentUser = null;
-      document.getElementById('navTraining').style.display = 'none';
-      document.getElementById('navTutorials').style.display = 'none';
-      document.getElementById('navAdmin').style.display = 'none';
-      document.getElementById('navQuestionnaire').style.display = 'none';
-      document.getElementById('navApplications').style.display = 'none';
-      document.getElementById('navAnalytics').style.display = 'none';
-      document.getElementById('navLogin').style.display = 'inline';
-      document.getElementById('logoutLink').style.display = 'none';
-      document.getElementById('displayTraining').innerHTML = "";
-      document.getElementById('displayTutorials').innerHTML = "";
-      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-      document.getElementById('login').classList.add('active');
-    });
-    /********************
-     * Get Started (Questionnaire for Visitors)
-     ********************/
-    async function buildQuestionnaireForm() {
-      const token = await getAccessToken();
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(QUESTIONS_RANGE)}`;
-      const response = await fetch(url, { headers: { "Authorization": `Bearer ${token}` } });
-      const data = await response.json();
-      let questions = [];
-      if (data.values) {
-        data.values.forEach((row, index) => {
-          questions.push({ row: index + 2, text: row[0] });
-        });
-      }
-      let formHtml = "<form id='questionForm'>";
-      questions.forEach((q, idx) => {
-        formHtml += `<div style="margin-bottom:1em;"><label><strong>Q${idx+1}: ${q.text}</strong></label><br><textarea name='answer${idx}' rows='3' style='width:100%;'></textarea></div>`;
-      });
-      formHtml += "</form>";
-      document.getElementById('questionnaireForm').innerHTML = formHtml;
-    }
-    document.getElementById('navGetStarted').addEventListener('click', () => {
-      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-      document.getElementById('getStarted').classList.add('active');
-      buildQuestionnaireForm();
-    });
-    document.getElementById('submitQuestionnaire').addEventListener('click', async () => {
-      const form = document.getElementById('questionForm');
-      const formData = new FormData(form);
-      let answers = {};
-      for (let [key, value] of formData.entries()) {
-        answers[key] = value;
-      }
-      const now = new Date().toLocaleString();
-      const ip = await getUserIP();
-      const deviceId = getDeviceId();
-      const token = await getAccessToken();
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${APPLICATIONS_RANGE}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
-      const body = JSON.stringify({ values: [[now, ip, JSON.stringify(answers), "", deviceId]] });
-      await fetch(url, {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
-        body: body
-      });
-      showNotification("Your application has been submitted.");
-      form.reset();
-    });
-    /********************
-     * Admin Panel Functions for Questionnaire Editor
-     ********************/
-    async function buildQuestionnaireEditor() {
-      const token = await getAccessToken();
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(QUESTIONS_RANGE)}`;
-      const response = await fetch(url, { headers: { "Authorization": `Bearer ${token}` } });
-      const data = await response.json();
-      let questions = [];
-      if (data.values) {
-        data.values.forEach((row, index) => {
-          questions.push({ row: index + 2, text: row[0] });
-        });
-      }
-      let output = "<ol>";
-      questions.forEach((q, idx) => {
-        output += `<li>${q.text} 
-          <button onclick="deleteQuestionRow(${q.row})">Delete</button> 
-          <button onclick="moveQuestionUp(${q.row})">Up</button> 
-          <button onclick="moveQuestionDown(${q.row})">Down</button></li>`;
-      });
-      output += "</ol>";
-      document.getElementById("questionList").innerHTML = output;
-    }
-    document.getElementById("addQuestion").addEventListener("click", async () => {
-      const newQ = document.getElementById("newQuestion").value;
-      if (newQ) {
-        await appendQuestion(newQ);
-        showNotification("Question added.");
-        document.getElementById("newQuestion").value = "";
-        buildQuestionnaireEditor();
-      } else {
-        showNotification("Please enter a question.");
-      }
-    });
-    async function deleteQuestionRow(row) {
-      if (confirm("Delete this question?")) {
-        await deleteQuestionRow(row);
-        showNotification("Question deleted.");
-        buildQuestionnaireEditor();
-      }
-    }
-    async function moveQuestionUp(row) {
-      if (row > 2) {
-        await swapQuestions(row, row - 1);
-        showNotification("Question moved up.");
-        buildQuestionnaireEditor();
-      }
-    }
-    async function moveQuestionDown(row) {
-      await swapQuestions(row, row + 1);
-      showNotification("Question moved down.");
-      buildQuestionnaireEditor();
-    }
-    async function swapQuestions(row1, row2) {
-      const token = await getAccessToken();
+      // Load current questions
       const questions = await loadQuestions();
       const q1 = questions.find(q => q.row === row1);
       const q2 = questions.find(q => q.row === row2);
@@ -1234,34 +960,17 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       const apps = await loadApplications();
       let output = "<ul>";
       apps.forEach(app => {
-        output += `<li><strong>${app.timestamp}</strong> - IP: ${app.ip} - Answers: ${app.answers} <button onclick="deleteApplicationRow(${app.row})">Delete</button></li>`;
+        output += `<li><strong>${app.timestamp}</strong> - IP: ${app.ip} - Answers: ${app.answers} <button onclick="deleteApplication(${app.row})">Delete</button></li>`;
       });
       output += "</ul>";
       document.getElementById("applicationsList").innerHTML = output;
     });
-    async function deleteApplicationRow(row) {
+    async function deleteApplication(row) {
       if (confirm("Delete this application?")) {
-        await deleteApplicationRowInternal(row);
+        await deleteApplication(row);
         showNotification("Application deleted.");
         document.getElementById("loadApplications").click();
       }
-    }
-    async function deleteApplicationRowInternal(row) {
-      const token = await getAccessToken();
-      const rowIndex = row - 1;
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}:batchUpdate`;
-      const body = JSON.stringify({
-        requests: [{
-          deleteDimension: {
-            range: { sheetId: APPLICATIONS_SHEET_ID, dimension: "ROWS", startIndex: rowIndex, endIndex: rowIndex + 1 }
-          }
-        }]
-      });
-      await fetch(url, {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
-        body: body
-      });
     }
     /********************
      * Admin Panel Functions for Analytics
@@ -1295,50 +1004,6 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       }
       return deviceId;
     }
-    /********************
-     * Notification Function
-     ********************/
-    function showNotification(message) {
-      const notification = document.createElement("div");
-      notification.className = "notification";
-      notification.textContent = message;
-      document.body.appendChild(notification);
-      setTimeout(() => notification.classList.add("show"), 100);
-      setTimeout(() => {
-        notification.classList.remove("show");
-        setTimeout(() => document.body.removeChild(notification), 500);
-      }, 2000);
-    }
-    /********************
-     * Settings & Dark Mode
-     ********************/
-    const settingsBtn = document.getElementById("settingsBtn");
-    const settingsPopover = document.getElementById("settingsPopover");
-    const modeSwitch = document.getElementById("modeSwitch");
-    settingsBtn.addEventListener("click", () => {
-      settingsPopover.style.display = settingsPopover.style.display === "block" ? "none" : "block";
-    });
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      modeSwitch.checked = true;
-      document.body.classList.add("dark-mode");
-    }
-    modeSwitch.addEventListener("change", () => {
-      if (modeSwitch.checked) {
-        document.body.classList.add("dark-mode");
-      } else {
-        document.body.classList.remove("dark-mode");
-      }
-    });
-    /********************
-     * Tab Switching
-     ********************/
-    document.querySelectorAll('.tab-link').forEach(link => {
-      link.addEventListener('click', () => {
-        const tabId = link.getAttribute('data-tab');
-        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-        document.getElementById(tabId).classList.add('active');
-      });
-    });
   </script>
 </body>
 </html>
