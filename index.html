@@ -10,60 +10,63 @@
   <button id="write-data">Write Data</button>
   <pre id="output"></pre>
 
-  <!-- 1. Include jsrsasign for JWT signing -->
+  <!-- Include jsrsasign for JWT signing -->
   <script src="https://cdn.jsdelivr.net/npm/jsrsasign"></script>
 
   <script>
-    // 2. Put your service account details here:
-    const SERVICE_ACCOUNT_EMAIL = "YOUR_SERVICE_ACCOUNT_EMAIL@PROJECT_ID.iam.gserviceaccount.com";
-    // For multiline private key, be sure to keep the formatting correct:
+    // Service account details
+    const SERVICE_ACCOUNT_EMAIL = "service-account@fitness-coaching-api.iam.gserviceaccount.com";
     const PRIVATE_KEY = `-----BEGIN PRIVATE KEY-----
-YOUR_PRIVATE_KEY_CONTENT
------END PRIVATE KEY-----`;
+MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCs4H5Hh6v2tsqo
+Z6MxKPprhhJr9TTCyvS/H+fL/Az4ngOAxEK0h054osWUa5lUzU7MZUFAszLmUiJZ
+qR+AKXqLtCtvbaGiRO7vyvI6zg+8JU3LdyKDxaYoJqD+/ZBI7vN+SCjxWla5V/bG
+psJKpMXyTyXMn8hqMxyzQ696LZ1rAiSR1AWosslfw2TCFFzDmZeqH8H3c4G1FZIJ
+dYt9+cGZYN7R2bhDWL2aRlXMJJXuC39P8zGojXVdZ+fKv1eiG/fhSRW6ddEJTror
+NsCNwIyQnpx1IQkq4lMMsgsOkwSNp56QtLVeTRkvtqsymBdF2fGWtCK+LWsXbIgj
++BribK+NAgMBAAECggEAEQXRAW+fU/2XUoJT/Cr+D5jl1voP7i9obqpwW3Jv/4ol
+q6gHrnmVVUUn4e+/ay2FORSuWnXayPmk9sGzv521+qwsy73WmOEjSvrno7k3LO5a
+bPLH9ARCEnmNSFaE/t2CnfhyiaN83ybFfrWcc5eqgyvee7nvFOAADznWvVfhBJCJ
+qEHV93niS4bHyO42S/dfwJCB9bH0LNuuDwkBo4ucAYzkltATDZdBtFFIH3KLuzgr
+Wv99PhJnVxoakrXqHkIyS638m+c1fqztYm2icHkgPFYbLSW3KOWBoU41iGLNioS6
+wkB47mAH0W+krRUHM5RXcaRW/7Uus7kXELmlJfCK6QKBgQDiotyiGvDXxhRBTyZv
+LJOZNJJ5Ux3mqiSS2HAB5B2B8Yeum1K4KxyqcYOC6JQioqNkH/WBX3vlWcGTATbx
+YfgQX6WU7YCByX/CrJ5QChll/YLFIz6mLyjPyPWbt32CiDSSU6AQi4NLaXCJOhlN
+4ihkohj3s+jrXoEfHfKZjYGFiQKBgQDDRocxhIAme+EM/MXK/Zzt7d7TCElF/3Pp
+MiZO0WsMZ9rZU+LzX7evP1+aCvCc9RGplgIkVl8/66G+DIGNoEIID3y23Xzs31WT
+C8o4eelP1TcN3apmczGpeWViuzUgsrydV4+iGiVnaFZLMtn/Fpz4jQlYhRGObwhb
+nMxvYztc5QKBgQDAJCc93+1UYgCGJh6Fnps8BlAwQAFXr+P2Az1ivQ0vP6AyrkiB
+DzvsXPSMJbaBbrVri5TOrC8UEPaGNT9pgg+Xgh+VlY2fez+vwj0tyoIh773QeMMC
+jXTiRJPGAtiLtAIuFGvd2wnjA29/SBxv5U8tkifsyUCtW5/Iy9ED0e5/UQKBgQCp
+lpLKulvhECy+7reINwEW0UJ22/dmxxePKnKCePUS7Q7vNx8eZb5MgCkyytV0OpGA
+SjrJ/Aj0plrthkbtDITMI0cYOPrJbJwQ/Gg+7AFnx6/sZtoZ52j12evm9taI8zFD
+JEwlZ7ecOszWue8Azk68vR+ktMwuetczWNVi1zcy0QKBgCv30zzEtv/uEmW4Uh1d
+rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
+6WxeGq4ufJup8vQrIn0l6F/OYxB118Z2G4Iz9F87jcUM6PYOfUwJt1g9CuUmzmSH
+7/TjHERfIzWM9qI+/ha6ZlIy
+-----END PRIVATE KEY-----
+`;
 
-    // 3. OAuth token endpoint
     const TOKEN_URL = "https://oauth2.googleapis.com/token";
-
-    // 4. Scope for Sheets read/write
     const SCOPES = "https://www.googleapis.com/auth/spreadsheets";
+    const SPREADSHEET_ID = "1aHnKAI9lNw8-ewOjwKV9XAwt8u10qU2C_OTFSoJCwe8";
+    const SHEET_RANGE = "Sheet1!A1:D5";
 
-    // 5. Your Spreadsheet details
-    const SPREADSHEET_ID = "YOUR_SPREADSHEET_ID"; // found in the sheet URL
-    // e.g. https://docs.google.com/spreadsheets/d/1ABC123DEF456/edit#gid=0
-    // '1ABC123DEF456' is your spreadsheet ID
-    const SHEET_RANGE = "Sheet1!A1:D5"; // adjust as needed
-
-    /**
-     * Generates a signed JWT, exchanges it for an access token, and returns a Promise
-     * that resolves to the access token string.
-     */
     async function getAccessToken() {
-      // Header
-      const header = {
-        alg: "RS256",
-        typ: "JWT"
-      };
-
-      // Current time and expiration
+      const header = { alg: "RS256", typ: "JWT" };
       const now = Math.floor(Date.now() / 1000);
-      const oneHour = 3600;
       const claims = {
         iss: SERVICE_ACCOUNT_EMAIL,
         scope: SCOPES,
         aud: TOKEN_URL,
         iat: now,
-        exp: now + oneHour
+        exp: now + 3600
       };
 
-      // Sign the JWT
       const sHeader = JSON.stringify(header);
       const sPayload = JSON.stringify(claims);
-
-      // Using jsrsasign to sign:
       const privateKey = KEYUTIL.getKey(PRIVATE_KEY);
       const sJWT = KJUR.jws.JWS.sign("RS256", sHeader, sPayload, privateKey);
 
-      // Exchange JWT for an access token
       const formData = new URLSearchParams();
       formData.append("grant_type", "urn:ietf:params:oauth:grant-type:jwt-bearer");
       formData.append("assertion", sJWT);
@@ -74,32 +77,19 @@ YOUR_PRIVATE_KEY_CONTENT
         body: formData.toString()
       });
 
-      if (!response.ok) {
-        throw new Error(`Token request failed: ${response.status} ${response.statusText}`);
-      }
-
       const data = await response.json();
-      return data.access_token; // valid for ~1 hour
+      return data.access_token;
     }
 
-    /**
-     * Example function to read data from the Sheet.
-     */
     async function readData() {
       try {
         const token = await getAccessToken();
         const range = encodeURIComponent(SHEET_RANGE);
         const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}`;
-        
+
         const response = await fetch(url, {
-          headers: {
-            "Authorization": `Bearer ${token}`
-          }
+          headers: { "Authorization": `Bearer ${token}` }
         });
-        
-        if (!response.ok) {
-          throw new Error(`Error reading sheet: ${response.status} ${response.statusText}`);
-        }
 
         const data = await response.json();
         document.getElementById("output").textContent = JSON.stringify(data, null, 2);
@@ -108,22 +98,15 @@ YOUR_PRIVATE_KEY_CONTENT
       }
     }
 
-    /**
-     * Example function to write data to the Sheet.
-     * This overwrites the specified range with new values.
-     */
     async function writeData() {
       try {
         const token = await getAccessToken();
         const range = encodeURIComponent(SHEET_RANGE);
         const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?valueInputOption=USER_ENTERED`;
 
-        // Example data to write:
         const newValues = {
           range: SHEET_RANGE,
-          values: [
-            ["Hello", "From", "Client", "Side"]
-          ]
+          values: [["Hello", "From", "Client", "Side"]]
         };
 
         const response = await fetch(url, {
@@ -135,10 +118,6 @@ YOUR_PRIVATE_KEY_CONTENT
           body: JSON.stringify(newValues)
         });
 
-        if (!response.ok) {
-          throw new Error(`Error writing to sheet: ${response.status} ${response.statusText}`);
-        }
-
         const result = await response.json();
         document.getElementById("output").textContent = JSON.stringify(result, null, 2);
       } catch (error) {
@@ -146,7 +125,6 @@ YOUR_PRIVATE_KEY_CONTENT
       }
     }
 
-    // Event listeners for buttons
     document.getElementById("read-data").addEventListener("click", readData);
     document.getElementById("write-data").addEventListener("click", writeData);
   </script>
