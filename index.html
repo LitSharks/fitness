@@ -89,7 +89,10 @@
     .slider {
       position: absolute;
       cursor: pointer;
-      top: 0; left: 0; right: 0; bottom: 0;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
       background-color: #ccc;
       transition: 0.4s;
       border-radius: 24px;
@@ -292,15 +295,19 @@
     <h2>Contact</h2>
     <p>
       <img src="phone-icon.png" alt="Phone" class="icon invert">
-      <span>Phone: temp</span>
+      <span>Phone: 437-882-3064</span>
     </p>
     <p>
-      <img src="email-icon.png" alt="Email" class="icon invert">
-      <span>Email: temp</span>
+      <img src="youtube-icon.png" alt="YouTube" class="icon invert">
+      <span><a href="https://www.youtube.com/channel/UCdgRDIruYvNcV_kUb-It_Pw" target="_blank" style="color:inherit; text-decoration:none;">YouTube Channel</a></span>
     </p>
     <p>
-      <img src="website-icon.png" alt="Website" class="icon invert">
-      <span>Web: temp</span>
+      <img src="instagram-icon.png" alt="Instagram" class="icon invert">
+      <span><a href="https://www.instagram.com/egg_anonymous/" target="_blank" style="color:inherit; text-decoration:none;">Instagram</a></span>
+    </p>
+    <p>
+      <img src="tiktok-icon.png" alt="TikTok" class="icon invert">
+      <span><a href="https://www.tiktok.com/@egganonymous" target="_blank" style="color:inherit; text-decoration:none;">TikTok</a></span>
     </p>
   </div>
 
@@ -397,7 +404,7 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
     const TOKEN_URL = "https://oauth2.googleapis.com/token";
     const SCOPES = "https://www.googleapis.com/auth/spreadsheets";
     const SPREADSHEET_ID = "1aHnKAI9lNw8-ewOjwKV9XAwt8u10qU2C_OTFSoJCwe8";
-    // Ranges
+    // Ranges for each tab
     const USERS_RANGE = `${SHEET_NAME}!A2:D1000`;
     const QUESTIONS_RANGE = "Questions!A2:A1000";
     const APPLICATIONS_RANGE = "Applications!A2:E1000";
@@ -520,14 +527,22 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       const range = `Questions!A${row}:A${row}`;
       const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?valueInputOption=USER_ENTERED`;
       const body = JSON.stringify({ values: [[questionText]] });
-      await fetch(url, { method: "PUT", headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" }, body: body });
+      await fetch(url, {
+        method: "PUT",
+        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+        body: body
+      });
     }
     async function appendQuestion(questionText) {
       const token = await getAccessToken();
       const range = "Questions!A:A";
       const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
       const body = JSON.stringify({ values: [[questionText]] });
-      await fetch(url, { method: "POST", headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" }, body: body });
+      await fetch(url, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+        body: body
+      });
     }
     async function deleteQuestion(row) {
       if (confirm("Delete this question?")) {
@@ -541,7 +556,11 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
             }
           }]
         });
-        await fetch(url, { method: "POST", headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" }, body: body });
+        await fetch(url, {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+          body: body
+        });
         showNotification("Question deleted.");
         buildQuestionnaireEditor();
       }
@@ -563,7 +582,13 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       let apps = [];
       if (data.values) {
         data.values.forEach((row, index) => {
-          apps.push({ row: index + 2, timestamp: row[0], ip: row[1], answers: row[2], username: row[3], deviceId: row[4] });
+          let answers = "";
+          try {
+            answers = JSON.stringify(JSON.parse(row[2]), null, 2);
+          } catch (e) {
+            answers = row[2];
+          }
+          apps.push({ row: index + 2, timestamp: row[0], ip: row[1], answers: answers, username: row[3], deviceId: row[4] });
         });
       }
       return apps;
@@ -580,7 +605,11 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
             }
           }]
         });
-        await fetch(url, { method: "POST", headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" }, body: body });
+        await fetch(url, {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+          body: body
+        });
         showNotification("Application deleted.");
         document.getElementById("loadApplications").click();
       }
@@ -856,10 +885,9 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
     document.getElementById('cancelEdit').addEventListener('click', () => {
       document.getElementById('editUser').style.display = 'none';
     });
-    // Expose functions for inline onclick
     window.deleteUser = deleteUser;
     window.editUser = editUser;
-    
+
     /********************
      * Admin Panel Functions for Questionnaire Editor
      ********************/
@@ -925,8 +953,6 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       buildQuestionnaireEditor();
     }
     async function swapQuestions(row1, row2) {
-      const token = await getAccessToken();
-      // Get current questions
       const questions = await loadQuestions();
       const q1 = questions.find(q => q.row === row1);
       const q2 = questions.find(q => q.row === row2);
@@ -949,7 +975,6 @@ rsRAnMW53Sx9dpLRu60PFGYO43Dq/CrBDwbbrCjHUNB1l6jaz2IBKHE6s/s3fXjt
       let apps = [];
       if (data.values) {
         data.values.forEach((row, index) => {
-          // Parse the answers JSON string for display
           let answers = "";
           try {
             answers = JSON.stringify(JSON.parse(row[2]), null, 2);
